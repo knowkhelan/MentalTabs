@@ -27,9 +27,9 @@ const ClosingSection = () => {
         </div>
 
         <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-          Your mind wasn't meant
+          A clearer mind,
           <br />
-          <span className="text-gradient">to hold everything.</span>
+          <span className="text-gradient">every day.</span>
         </h2>
         
         <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto">
