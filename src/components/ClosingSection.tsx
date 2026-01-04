@@ -32,9 +32,6 @@ const ClosingSection = () => {
           <span className="text-gradient">every day.</span>
         </h2>
         
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto">
-          Stop carrying the mental load. Let Mental Tabs organize your thoughts so you can focus on what matters.
-        </p>
 
         {!isSubmitted ? (
           <div>
