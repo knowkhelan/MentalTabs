@@ -62,10 +62,6 @@ const ClosingSection = () => {
             <p className="text-muted-foreground mt-1">You'll be first to know when we launch.</p>
           </div>
         )}
-
-        <p className="text-muted-foreground font-medium">
-          Built for people who <span className="text-foreground">think a lot.</span>
-        </p>
       </div>
     </section>
   );
