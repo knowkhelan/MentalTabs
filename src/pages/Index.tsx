@@ -1,9 +1,7 @@
 import HeroSection from "@/components/HeroSection";
 import TransformationVisual from "@/components/TransformationVisual";
 import HowItWorks from "@/components/HowItWorks";
-import PlatformSection from "@/components/PlatformSection";
-import WhyItMatters from "@/components/WhyItMatters";
-import WhoItsFor from "@/components/WhoItsFor";
+import UseCases from "@/components/UseCases";
 import ClosingSection from "@/components/ClosingSection";
 import Footer from "@/components/Footer";
 
@@ -13,9 +11,7 @@ const Index = () => {
       <HeroSection />
       <TransformationVisual />
       <HowItWorks />
-      <PlatformSection />
-      <WhyItMatters />
-      <WhoItsFor />
+      <UseCases />
       <ClosingSection />
       <Footer />
     </main>
