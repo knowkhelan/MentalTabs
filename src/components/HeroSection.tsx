@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 
 const floatingThoughts = [
-  { text: "Call investor tomorrow", delay: "0s", position: "top-16 left-8 md:left-16" },
-  { text: "Why do I feel stuck here?", delay: "1s", position: "top-32 right-4 md:right-20" },
-  { text: "Idea: new hiring approach", delay: "0.5s", position: "top-48 left-4 md:left-32" },
-  { text: "Follow up on proposal", delay: "1.5s", position: "top-24 right-8 md:right-40" },
+  { text: "call investor back", delay: "0s", position: "top-20 left-[5%]", color: "text-red-500/60" },
+  { text: "why do I keep procrastinating?", delay: "1.5s", position: "top-32 right-[8%]", color: "text-purple-500/60" },
+  { text: "startup idea: AI for...", delay: "0.8s", position: "top-48 left-[12%]", color: "text-emerald-500/60" },
+  { text: "feeling overwhelmed", delay: "2s", position: "top-16 right-[15%]", color: "text-blue-500/60" },
+  { text: "birthday gift for mom", delay: "0.3s", position: "bottom-40 left-[8%]", color: "text-amber-600/60" },
+  { text: "dentist appointment", delay: "1.2s", position: "bottom-32 right-[5%]", color: "text-orange-500/60" },
+  { text: "follow up on proposal", delay: "0.6s", position: "top-60 right-[25%]", color: "text-teal-500/60" },
+  { text: "need to exercise more", delay: "1.8s", position: "bottom-48 left-[20%]", color: "text-pink-500/60" },
 ];
 
 const HeroSection = () => {
@@ -21,91 +25,83 @@ const HeroSection = () => {
     }
   };
 
-  const scrollToHowItWorks = () => {
-    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <section className="relative min-h-screen flex flex-col justify-center px-6 py-20 md:py-28 bg-hero-gradient overflow-hidden">
-      {/* Floating thought bubbles - decorative */}
+    <section className="min-h-[95vh] flex flex-col justify-center px-6 py-16 md:py-24 relative overflow-hidden bg-hero-gradient">
+      {/* Floating thought bubbles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {floatingThoughts.map((thought, index) => (
           <div
             key={index}
-            className={`absolute ${thought.position} hidden md:block animate-float-gentle opacity-40`}
+            className={`absolute ${thought.position} hidden lg:block animate-float-slow`}
             style={{ animationDelay: thought.delay }}
           >
-            <div className="px-4 py-2 bg-card/60 backdrop-blur-sm rounded-full border border-border/50 text-sm text-muted-foreground whitespace-nowrap">
+            <div className={`px-4 py-2 bg-card/40 backdrop-blur-sm rounded-full border border-border/30 text-sm font-medium ${thought.color} whitespace-nowrap shadow-sm`}>
               {thought.text}
             </div>
           </div>
         ))}
         
-        {/* Soft gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-soft" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse-soft animation-delay-1000" />
+        {/* Gradient orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-soft" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse-soft animation-delay-1000" />
       </div>
 
       <div className="max-w-3xl mx-auto text-center relative z-10">
-        {/* Logo/Name */}
-        <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-foreground mb-4 animate-fade-up tracking-tight">
-          Mental Tab
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-border mb-8 animate-fade-up">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">AI-powered mental clarity</span>
+        </div>
+
+        <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-[1.1] mb-6 animate-fade-up animation-delay-100">
+          Too many tabs open
+          <br />
+          <span className="text-gradient">in your head?</span>
         </h1>
         
-        {/* Tagline */}
-        <p className="font-display text-2xl md:text-3xl lg:text-4xl text-foreground/90 mb-6 animate-fade-up animation-delay-100 italic">
-          Turn thoughts into clarity. Automatically.
-        </p>
-        
-        {/* Subheading */}
-        <p className="text-lg md:text-xl text-muted-foreground mb-4 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
-          A universal thinking tool for ideas, actions, and questions — captured the moment they appear.
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
+          Mental Tabs captures any thought and turns it into clear actions, 
+          reflections, or questions — <span className="text-foreground font-medium">automatically.</span>
         </p>
 
-        {/* Platform mention */}
-        <p className="text-sm md:text-base text-muted-foreground/80 mb-10 animate-fade-up animation-delay-300">
-          Works through WhatsApp, Slack, Telegram, and Email.<br className="hidden sm:block" />
-          No app switching. No organizing.
-        </p>
-
-        {/* CTAs */}
         {!isSubmitted ? (
-          <div className="animate-fade-up animation-delay-400">
+          <div className="animate-fade-up animation-delay-300">
             <form 
               onSubmit={handleSubmit} 
               className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mb-4"
             >
               <Input
                 type="email"
-                placeholder="Your email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-14 bg-background border-border text-foreground placeholder:text-muted-foreground text-base px-5 rounded-xl"
+                className="flex-1 h-14 bg-background border-border text-foreground placeholder:text-muted-foreground text-base px-5"
                 required
               />
               <Button 
                 type="submit" 
-                className="h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-medium rounded-xl"
+                className="h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold animate-pulse-glow"
               >
-                Get Early Access
+                Clear your mental tabs
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </form>
             
-            <button 
-              onClick={scrollToHowItWorks}
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
-            >
-              See how it works
-              <ArrowDown className="w-4 h-4" />
-            </button>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+              <MessageCircle className="w-4 h-4" />
+              <span>Works with WhatsApp & Telegram</span>
+            </div>
           </div>
         ) : (
-          <div className="bg-card border border-border rounded-2xl p-6 max-w-md mx-auto animate-fade-up">
-            <p className="text-foreground font-display text-xl mb-1">You're on the list</p>
-            <p className="text-muted-foreground">We'll reach out when Mental Tab is ready for you.</p>
+          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 max-w-md mx-auto mb-6 animate-fade-up">
+            <p className="text-foreground font-semibold text-lg">You're in! 🎉</p>
+            <p className="text-muted-foreground mt-1">We'll notify you when Mental Tabs is ready.</p>
           </div>
         )}
+
+        <p className="text-sm text-muted-foreground animate-fade-up animation-delay-400 font-medium">
+          No organizing. No thinking. <span className="text-foreground">Just dump it.</span>
+        </p>
       </div>
     </section>
   );
