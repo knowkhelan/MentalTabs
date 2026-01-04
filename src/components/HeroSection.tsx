@@ -93,7 +93,7 @@ const HeroSection = () => {
             
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
               <MessageCircle className="w-4 h-4" />
-              <span>Works with WhatsApp & Telegram</span>
+              <span>Works with WhatsApp, Email and Slack</span>
             </div>
           </div>
         ) : (
