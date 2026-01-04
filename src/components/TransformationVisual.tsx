@@ -1,33 +1,32 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, Zap, CheckCircle2, Lightbulb, HelpCircle, X } from "lucide-react";
+import { CheckCircle, Lightbulb, HelpCircle, ArrowRight } from "lucide-react";
 
-const chaosThoughts = [
-  { text: "call investor back", color: "text-red-500/80" },
-  { text: "why do I keep procrastinating?", color: "text-purple-500/80" },
-  { text: "birthday gift for mom", color: "text-amber-600/80" },
-  { text: "feeling overwhelmed lately", color: "text-blue-500/80" },
-  { text: "startup idea: AI for...", color: "text-emerald-500/80" },
-  { text: "dentist appointment", color: "text-orange-500/80" },
+const rawThoughts = [
+  { text: "Call investor tomorrow", type: "action" },
+  { text: "Why do I feel stuck here?", type: "curiosity" },
+  { text: "Idea: new hiring approach", type: "thought" },
+  { text: "Follow up on proposal", type: "action" },
+  { text: "Something feels off about Q3 plan", type: "curiosity" },
 ];
 
-const organizedCards = [
-  { 
-    label: "Action", 
-    icon: CheckCircle2, 
-    items: ["Call investor back", "Book dentist appointment"],
-    color: "bg-emerald-500/10 border-emerald-500/30 text-emerald-700"
-  },
+const categories = [
   { 
     label: "Thought", 
     icon: Lightbulb, 
-    items: ["Startup idea: AI for...", "Birthday gift for mom"],
-    color: "bg-amber-500/10 border-amber-500/30 text-amber-700"
+    color: "bg-amber-50 border-amber-200 text-amber-800",
+    items: ["Idea: new hiring approach"]
+  },
+  { 
+    label: "Action", 
+    icon: CheckCircle, 
+    color: "bg-emerald-50 border-emerald-200 text-emerald-800",
+    items: ["Call investor tomorrow", "Follow up on proposal"]
   },
   { 
     label: "Curiosity", 
     icon: HelpCircle, 
-    items: ["Why do I keep procrastinating?", "Feeling overwhelmed lately"],
-    color: "bg-blue-500/10 border-blue-500/30 text-blue-700"
+    color: "bg-sky-50 border-sky-200 text-sky-800",
+    items: ["Why do I feel stuck here?", "Something feels off about Q3 plan"]
   },
 ];
 
@@ -35,98 +34,81 @@ const TransformationVisual = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 500);
-    return () => clearTimeout(timer);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    const section = document.getElementById('transformation-visual');
+    if (section) observer.observe(section);
+
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <section className="py-16 md:py-24 px-6 bg-gradient-to-b from-background via-accent/20 to-background">
+    <section id="transformation-visual" className="py-20 md:py-28 px-6 bg-section-warm">
       <div className="max-w-6xl mx-auto">
-        <h2 className="font-display text-2xl md:text-3xl text-center text-foreground mb-4">
-          From mental chaos to <span className="text-gradient font-bold">crystal clarity</span>
-        </h2>
-        <p className="text-center text-muted-foreground mb-12 md:mb-16 max-w-xl mx-auto">
-          Watch your scattered thoughts transform into organized clarity
-        </p>
+        <div className="text-center mb-16">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground mb-4">
+            From scattered to structured
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            Your thoughts arrive messy. Mental Tab organizes them instantly.
+          </p>
+        </div>
 
-        <div className="grid lg:grid-cols-[1fr,auto,1fr] gap-8 lg:gap-6 items-center">
-          {/* Chaos Side - Browser Tabs */}
-          <div className={`relative transition-all duration-700 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border relative overflow-hidden">
-              {/* Browser chrome */}
-              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400/60" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400/60" />
-                  <div className="w-3 h-3 rounded-full bg-green-400/60" />
+        <div className="grid lg:grid-cols-[1fr,auto,1fr] gap-8 lg:gap-12 items-center">
+          {/* Raw thoughts */}
+          <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">
+              What's on your mind
+            </p>
+            <div className="space-y-3">
+              {rawThoughts.map((thought, index) => (
+                <div
+                  key={index}
+                  className={`p-4 bg-background rounded-xl border border-border shadow-sm transition-all duration-500 ${isVisible ? 'animate-float-subtle' : ''}`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
+                  <p className="text-foreground/80 font-medium">{thought.text}</p>
                 </div>
-                <div className="flex-1 text-center">
-                  <span className="text-xs text-muted-foreground font-medium">your_brain.exe</span>
-                </div>
-              </div>
-
-              {/* Floating chaos tabs */}
-              <div className="relative min-h-[280px]">
-                {chaosThoughts.map((thought, index) => (
-                  <div
-                    key={index}
-                    className={`absolute flex items-center gap-2 px-3 py-2 bg-background rounded-lg border border-border shadow-sm
-                      ${index % 2 === 0 ? 'animate-tab-float' : 'animate-tab-float-alt'}`}
-                    style={{
-                      top: `${(index % 3) * 80 + 10}px`,
-                      left: `${(index % 2) * 40 + (index > 2 ? 20 : 0)}px`,
-                      animationDelay: `${index * 0.3}s`,
-                      zIndex: 6 - index,
-                    }}
-                  >
-                    <X className="w-3 h-3 text-muted-foreground/50" />
-                    <span className={`text-sm font-medium ${thought.color} whitespace-nowrap`}>
-                      {thought.text}
-                    </span>
-                  </div>
-                ))}
-                
-                {/* Tab counter */}
-                <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full">
-                  <span className="text-xs font-bold text-red-500">47 tabs open 🤯</span>
-                </div>
-              </div>
+              ))}
             </div>
-            <p className="text-center text-muted-foreground text-sm mt-4 font-medium">Your brain right now</p>
           </div>
 
-          {/* Transformation Arrow */}
-          <div className={`flex flex-col items-center justify-center transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-            <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center animate-transform-pulse">
-              <Zap className="w-7 h-7 text-primary" />
+          {/* Arrow */}
+          <div className={`flex items-center justify-center transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+            <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <ArrowRight className="w-6 h-6 text-primary hidden lg:block" />
+              <span className="lg:hidden text-primary text-xl">↓</span>
             </div>
-            <ArrowRight className="w-8 h-8 text-primary mt-3 hidden lg:block" />
-            <div className="lg:hidden mt-3 text-primary text-2xl">↓</div>
           </div>
 
-          {/* Organized Side */}
-          <div className={`space-y-4 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-            {organizedCards.map((card, index) => (
+          {/* Organized categories */}
+          <div className={`space-y-4 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 font-medium">
+              Organized by Mental Tab
+            </p>
+            {categories.map((category, index) => (
               <div
                 key={index}
-                className={`p-4 rounded-xl border ${card.color} transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
-                style={{ animationDelay: `${0.6 + index * 0.15}s` }}
+                className={`p-4 rounded-xl border ${category.color} transition-all duration-300 hover:shadow-md`}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <card.icon className="w-5 h-5" />
-                  <span className="font-display font-semibold">{card.label}</span>
+                  <category.icon className="w-4 h-4" />
+                  <span className="font-medium text-sm">{category.label}</span>
                 </div>
-                <ul className="space-y-2">
-                  {card.items.map((item, i) => (
-                    <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-current mt-2 flex-shrink-0" />
-                      {item}
-                    </li>
+                <ul className="space-y-1.5">
+                  {category.items.map((item, i) => (
+                    <li key={i} className="text-sm opacity-80">{item}</li>
                   ))}
                 </ul>
               </div>
             ))}
-            <p className="text-center text-muted-foreground text-sm mt-4 font-medium">After Mental Tabs ✨</p>
           </div>
         </div>
       </div>
