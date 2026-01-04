@@ -40,7 +40,7 @@ const TransformationVisual = () => {
   }, []);
 
   return (
-    <section className="py-16 md:py-24 px-6 bg-gradient-to-b from-background via-accent/20 to-background">
+    <section className="py-20 md:py-28 px-6 bg-gradient-to-b from-background via-accent/20 to-background">
       <div className="max-w-6xl mx-auto">
         <h2 className="font-display text-2xl md:text-3xl text-center text-foreground mb-4">
           From mental chaos to <span className="text-gradient font-bold">crystal clarity</span>
