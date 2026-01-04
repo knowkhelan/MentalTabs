@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Brain } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const ClosingSection = () => {
   const [email, setEmail] = useState("");
@@ -11,31 +11,16 @@ const ClosingSection = () => {
     e.preventDefault();
     if (email) {
       setIsSubmitted(true);
-      // TODO: Connect to backend for waitlist
     }
   };
 
   return (
-    <section className="py-24 md:py-32 px-6 relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="max-w-2xl mx-auto text-center relative z-10">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-8">
-          <Brain className="w-8 h-8 text-primary" />
-        </div>
-
-        <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-          Your mind wasn't meant
-          <br />
-          <span className="text-gradient">to hold everything.</span>
+    <section className="py-24 md:py-32 px-6">
+      <div className="max-w-2xl mx-auto text-center">
+        <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground mb-6 leading-tight">
+          A clearer mind,<br />
+          <span className="italic">every day.</span>
         </h2>
-        
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto">
-          Stop carrying the mental load. Let Mental Tabs organize your thoughts so you can focus on what matters.
-        </p>
 
         {!isSubmitted ? (
           <div>
@@ -45,31 +30,31 @@ const ClosingSection = () => {
             >
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-14 bg-card border-border text-foreground placeholder:text-muted-foreground text-base px-5"
+                className="flex-1 h-14 bg-card border-border text-foreground placeholder:text-muted-foreground text-base px-5 rounded-xl"
                 required
               />
               <Button 
                 type="submit" 
-                className="h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold"
+                className="h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-medium rounded-xl"
               >
-                Start closing tabs
+                Try Mental Tab
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </form>
+            
+            <p className="text-sm text-muted-foreground">
+              Early access · Built in public · Feedback-driven
+            </p>
           </div>
         ) : (
-          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 max-w-md mx-auto mb-6">
-            <p className="text-foreground font-semibold text-lg">Welcome aboard! 🧠✨</p>
-            <p className="text-muted-foreground mt-1">You'll be first to know when we launch.</p>
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-md mx-auto">
+            <p className="text-foreground font-display text-xl mb-1">Welcome aboard</p>
+            <p className="text-muted-foreground">We'll be in touch soon.</p>
           </div>
         )}
-
-        <p className="text-muted-foreground font-medium">
-          Built for people who <span className="text-foreground">think a lot.</span>
-        </p>
       </div>
     </section>
   );

@@ -1,66 +1,58 @@
-import { MessageSquare, Sparkles, Brain } from "lucide-react";
+import { MessageCircle, Sparkles, Focus } from "lucide-react";
 
 const steps = [
   {
-    icon: MessageSquare,
+    icon: MessageCircle,
     number: "01",
-    title: "Dump any thought",
-    description: "Task, idea, worry, reminder, curiosity — anything. Just send it.",
-    accent: "from-primary/20 to-primary/5"
+    title: "Capture anything",
+    description: "Send a message to Mental Tab like you would to a person. No formatting, no categories.",
   },
   {
     icon: Sparkles,
     number: "02",
-    title: "AI organizes it instantly",
-    description: "Without you labeling or categorizing. It just happens.",
-    accent: "from-secondary/20 to-secondary/5"
+    title: "AI understands context",
+    description: "Mental Tab figures out whether it's a thought, action, or curiosity — automatically.",
   },
   {
-    icon: Brain,
+    icon: Focus,
     number: "03",
-    title: "Your mind gets clarity",
-    description: "Everything in the right place. Mental load lifted.",
-    accent: "from-emerald-500/20 to-emerald-500/5"
+    title: "Stay clear, stay focused",
+    description: "Everything stays structured so your mind doesn't have to hold it all.",
   }
 ];
 
 const HowItWorks = () => {
   return (
-    <section className="py-20 md:py-28 px-6">
+    <section id="how-it-works" className="py-20 md:py-28 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground mb-4">
             How it works
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Three steps. Zero friction. Instant clarity.
+          <p className="text-muted-foreground text-lg">
+            Three steps. Zero effort.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {steps.map((step, index) => (
-            <div 
-              key={index} 
-              className="group relative"
-            >
-              {/* Connecting line */}
+            <div key={index} className="relative group">
+              {/* Connector line */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-16 left-[calc(50%+60px)] w-[calc(100%-60px)] h-0.5 bg-gradient-to-r from-border to-transparent" />
+                <div className="hidden md:block absolute top-12 left-[calc(50%+48px)] w-[calc(100%-48px)] h-px bg-border" />
               )}
               
-              <div className={`relative p-8 rounded-2xl bg-gradient-to-b ${step.accent} border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}>
-                {/* Step number */}
-                <span className="absolute top-4 right-4 text-5xl font-display font-bold text-foreground/5">
-                  {step.number}
-                </span>
-                
-                <div className="w-14 h-14 rounded-xl bg-background border border-border flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-primary/30 transition-all duration-300">
-                  <step.icon className="w-7 h-7 text-foreground" strokeWidth={1.5} />
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-card border border-border mb-6 group-hover:border-primary/30 group-hover:shadow-lg transition-all duration-300">
+                  <step.icon className="w-10 h-10 text-foreground/70" strokeWidth={1.5} />
                 </div>
                 
-                <h3 className="font-display font-semibold text-xl text-foreground mb-3">
+                <p className="text-xs text-muted-foreground font-medium mb-2">Step {step.number}</p>
+                
+                <h3 className="font-display text-xl md:text-2xl text-foreground mb-3">
                   {step.title}
                 </h3>
+                
                 <p className="text-muted-foreground leading-relaxed">
                   {step.description}
                 </p>
