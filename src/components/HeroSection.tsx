@@ -4,14 +4,18 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 
 const floatingThoughts = [
-  { text: "call investor back", delay: "0s", position: "top-20 left-[5%]", color: "text-red-500/60" },
-  { text: "why do I keep procrastinating?", delay: "1.5s", position: "top-32 right-[8%]", color: "text-purple-500/60" },
-  { text: "startup idea: AI for...", delay: "0.8s", position: "top-48 left-[12%]", color: "text-emerald-500/60" },
-  { text: "feeling overwhelmed", delay: "2s", position: "top-16 right-[15%]", color: "text-blue-500/60" },
-  { text: "birthday gift for mom", delay: "0.3s", position: "bottom-40 left-[8%]", color: "text-amber-600/60" },
-  { text: "dentist appointment", delay: "1.2s", position: "bottom-32 right-[5%]", color: "text-orange-500/60" },
-  { text: "follow up on proposal", delay: "0.6s", position: "top-60 right-[25%]", color: "text-teal-500/60" },
-  { text: "need to exercise more", delay: "1.8s", position: "bottom-48 left-[20%]", color: "text-pink-500/60" },
+  { text: "call investor back", delay: "0s", position: "top-24 left-[3%]" },
+  { text: "why do I keep procrastinating?", delay: "2s", position: "top-20 right-[5%]" },
+  { text: "startup idea", delay: "1s", position: "top-44 left-[8%]" },
+  { text: "feeling stuck", delay: "3s", position: "top-16 right-[18%]" },
+  { text: "birthday gift", delay: "0.5s", position: "bottom-36 left-[5%]" },
+  { text: "dentist", delay: "1.5s", position: "bottom-28 right-[8%]" },
+  { text: "follow up", delay: "0.8s", position: "top-56 right-[12%]" },
+  { text: "exercise", delay: "2.5s", position: "bottom-44 left-[15%]" },
+  { text: "email back", delay: "1.2s", position: "top-36 left-[18%]" },
+  { text: "book flights", delay: "3.5s", position: "bottom-24 right-[20%]" },
+  { text: "team sync", delay: "0.3s", position: "top-64 left-[2%]" },
+  { text: "groceries", delay: "2.8s", position: "bottom-52 right-[3%]" },
 ];
 
 const HeroSection = () => {
@@ -32,10 +36,10 @@ const HeroSection = () => {
         {floatingThoughts.map((thought, index) => (
           <div
             key={index}
-            className={`absolute ${thought.position} hidden lg:block animate-float-slow`}
+            className={`absolute ${thought.position} hidden md:block animate-float-slow`}
             style={{ animationDelay: thought.delay }}
           >
-            <div className={`px-4 py-2 bg-card/40 backdrop-blur-sm rounded-full border border-border/30 text-sm font-medium ${thought.color} whitespace-nowrap shadow-sm`}>
+            <div className="px-3 py-1.5 bg-card/20 rounded-full border border-border/20 text-xs text-muted-foreground/40 whitespace-nowrap">
               {thought.text}
             </div>
           </div>
