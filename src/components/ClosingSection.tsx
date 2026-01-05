@@ -1,17 +1,12 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ArrowRight, Brain } from "lucide-react";
 
 const ClosingSection = () => {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setIsSubmitted(true);
-    }
+  const handleGetStarted = () => {
+    navigate("/onboarding");
   };
 
   return (
@@ -33,35 +28,13 @@ const ClosingSection = () => {
         </h2>
         
 
-        {!isSubmitted ? (
-          <div>
-            <form 
-              onSubmit={handleSubmit} 
-              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mb-6"
-            >
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-14 bg-card border-border text-foreground placeholder:text-muted-foreground text-base px-5"
-                required
-              />
-              <Button 
-                type="submit" 
-                className="h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold"
-              >
-                Start closing tabs
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </form>
-          </div>
-        ) : (
-          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 max-w-md mx-auto mb-6">
-            <p className="text-foreground font-semibold text-lg">Welcome aboard! 🧠✨</p>
-            <p className="text-muted-foreground mt-1">You'll be first to know when we launch.</p>
-          </div>
-        )}
+        <Button 
+          onClick={handleGetStarted}
+          className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold"
+        >
+          Start closing tabs
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
       </div>
     </section>
   );
