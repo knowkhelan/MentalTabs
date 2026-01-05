@@ -1,8 +1,9 @@
-import { Check, Lightbulb, Zap, HelpCircle, ExternalLink } from "lucide-react";
+import { Check, Lightbulb, Zap, HelpCircle, ExternalLink, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SuccessScreenProps {
   onComplete: () => void;
+  onBack: () => void;
 }
 
 const categories = [
@@ -11,9 +12,17 @@ const categories = [
   { label: "Curiosity", icon: HelpCircle, color: "text-secondary" },
 ];
 
-const SuccessScreen = ({ onComplete }: SuccessScreenProps) => {
+const SuccessScreen = ({ onComplete, onBack }: SuccessScreenProps) => {
   return (
     <div className="text-center">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 mx-auto"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       {/* Success checkmark */}
       <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-8 animate-fade-in">
         <div className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center">
@@ -48,22 +57,13 @@ const SuccessScreen = ({ onComplete }: SuccessScreenProps) => {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <Button
-          onClick={onComplete}
-          className="w-full h-14 text-base font-semibold"
-        >
-          Open Notion Dashboard
-          <ExternalLink className="ml-2 w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={onComplete}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          I'll check it later
-        </Button>
-      </div>
+      <Button
+        onClick={onComplete}
+        className="w-full h-14 text-base font-semibold"
+      >
+        Open Notion Dashboard
+        <ExternalLink className="ml-2 w-4 h-4" />
+      </Button>
     </div>
   );
 };
