@@ -5,17 +5,17 @@ import OutputDestinationScreen from "@/components/onboarding/OutputDestinationSc
 import FirstThoughtScreen from "@/components/onboarding/FirstThoughtScreen";
 import SuccessScreen from "@/components/onboarding/SuccessScreen";
 
-export type InputSource = "slack" | "whatsapp" | "email" | null;
+export type InputSource = "slack" | "whatsapp" | "email";
 export type OutputDestination = "notion" | "mental-tab" | null;
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [inputSource, setInputSource] = useState<InputSource>(null);
+  const [inputSources, setInputSources] = useState<InputSource[]>([]);
   const [outputDestination, setOutputDestination] = useState<OutputDestination>(null);
 
-  const handleInputSelect = (source: InputSource) => {
-    setInputSource(source);
+  const handleInputContinue = (sources: string[]) => {
+    setInputSources(sources as InputSource[]);
     setStep(2);
   };
 
@@ -53,7 +53,7 @@ const Onboarding = () => {
 
         {/* Screens */}
         <div className="animate-fade-up">
-          {step === 1 && <InputSourceScreen onSelect={handleInputSelect} />}
+          {step === 1 && <InputSourceScreen onContinue={handleInputContinue} />}
           {step === 2 && (
             <OutputDestinationScreen
               onSelect={handleOutputSelect}
@@ -62,7 +62,7 @@ const Onboarding = () => {
           )}
           {step === 3 && (
             <FirstThoughtScreen
-              inputSource={inputSource}
+              inputSource={inputSources[0] || "slack"}
               onComplete={handleFirstThoughtSent}
               onBack={() => setStep(2)}
             />
