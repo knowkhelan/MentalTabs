@@ -26,9 +26,10 @@ const OutputDestinationScreen = ({
     <div className="text-center">
       <button
         onClick={onBack}
-        className="absolute top-6 left-6 p-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 mx-auto"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm">Back</span>
       </button>
 
       <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
