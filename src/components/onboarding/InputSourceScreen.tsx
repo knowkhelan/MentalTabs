@@ -61,11 +61,8 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
       <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
         Where do thoughts usually show up for you?
       </h1>
-      <p className="text-muted-foreground mb-3">
+      <p className="text-muted-foreground mb-8">
         Select all that apply — we'll organize thoughts from each.
-      </p>
-      <p className="text-sm text-primary/70 mb-8">
-        ✓ Multiple selections encouraged
       </p>
 
       <div className="space-y-3 mb-8">
