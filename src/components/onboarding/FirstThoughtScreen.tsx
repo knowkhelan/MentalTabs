@@ -52,9 +52,17 @@ const FirstThoughtScreen = ({
       <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
         Send your first thought
       </h1>
-      <p className="text-muted-foreground mb-10 max-w-sm mx-auto">
+      <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
         Send a message to Mental Tab from {sourceName} — just like you normally would.
       </p>
+
+      <Button
+        variant="ghost"
+        className="text-muted-foreground hover:text-foreground mb-8"
+      >
+        <ExternalLink className="w-4 h-4 mr-2" />
+        Open {sourceName}
+      </Button>
 
       {/* Example card */}
       <div className="bg-accent/50 border border-border rounded-2xl p-6 mb-8">
@@ -68,21 +76,12 @@ const FirstThoughtScreen = ({
         "If it's in your head, it belongs here."
       </p>
 
-      <div className="space-y-3">
-        <Button
-          onClick={onComplete}
-          className="w-full h-14 text-base font-semibold"
-        >
-          I've sent my first thought
-        </Button>
-        <Button
-          variant="ghost"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <ExternalLink className="w-4 h-4 mr-2" />
-          Open {sourceName}
-        </Button>
-      </div>
+      <Button
+        onClick={onComplete}
+        className="w-full h-14 text-base font-semibold"
+      >
+        I've sent my first thought
+      </Button>
     </div>
   );
 };
