@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 
 const floatingThoughts = [
@@ -19,14 +18,10 @@ const floatingThoughts = [
 ];
 
 const HeroSection = () => {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setIsSubmitted(true);
-    }
+  const handleGetStarted = () => {
+    navigate("/onboarding");
   };
 
   return (
@@ -68,40 +63,20 @@ const HeroSection = () => {
           reflections, or questions — <span className="text-foreground font-medium">automatically.</span>
         </p>
 
-        {!isSubmitted ? (
-          <div className="animate-fade-up animation-delay-300">
-            <form 
-              onSubmit={handleSubmit} 
-              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mb-4"
-            >
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-14 bg-background border-border text-foreground placeholder:text-muted-foreground text-base px-5"
-                required
-              />
-              <Button 
-                type="submit" 
-                className="h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold animate-pulse-glow"
-              >
-                Clear your mental tabs
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </form>
-            
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
-              <MessageCircle className="w-4 h-4" />
-              <span>Works with WhatsApp, Email and Slack</span>
-            </div>
+        <div className="animate-fade-up animation-delay-300">
+          <Button 
+            onClick={handleGetStarted}
+            className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold animate-pulse-glow mb-4"
+          >
+            Try Mental Tab
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+          
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+            <MessageCircle className="w-4 h-4" />
+            <span>Works with WhatsApp, Email and Slack</span>
           </div>
-        ) : (
-          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 max-w-md mx-auto mb-6 animate-fade-up">
-            <p className="text-foreground font-semibold text-lg">You're in! 🎉</p>
-            <p className="text-muted-foreground mt-1">We'll notify you when Mental Tabs is ready.</p>
-          </div>
-        )}
+        </div>
 
         <p className="text-sm text-muted-foreground animate-fade-up animation-delay-400 font-medium">
           No organizing. No thinking. <span className="text-foreground">Just dump it.</span>
