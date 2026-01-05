@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { MessageSquare, MessageCircle, Mail, Check } from "lucide-react";
+import { MessageSquare, MessageCircle, Mail, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 interface InputSourceScreenProps {
@@ -13,21 +14,18 @@ const inputOptions = [
     label: "Slack",
     icon: MessageSquare,
     description: "Quick messages to yourself",
-    connectLabel: "Connect Slack",
   },
   {
     id: "whatsapp",
     label: "WhatsApp",
     icon: MessageCircle,
     description: "Voice notes & quick texts",
-    connectLabel: "Connect WhatsApp",
   },
   {
     id: "email",
     label: "Email",
     icon: Mail,
     description: "Send thoughts anytime",
-    connectLabel: "Connect Email",
   },
 ];
 
@@ -63,8 +61,11 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
       <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
         Where do thoughts usually show up for you?
       </h1>
-      <p className="text-muted-foreground mb-10">
-        You can connect more than one. We'll start organizing thoughts from all of them.
+      <p className="text-muted-foreground mb-3">
+        Select all that apply — we'll organize thoughts from each.
+      </p>
+      <p className="text-sm text-primary/70 mb-8">
+        ✓ Multiple selections encouraged
       </p>
 
       <div className="space-y-3 mb-8">
@@ -74,21 +75,35 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
           const connecting = connectingSource === option.id;
 
           return (
-            <button
+            <div
               key={option.id}
               onClick={() => toggleSelection(option.id)}
               className={cn(
-                "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 group text-left",
+                "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 cursor-pointer text-left relative",
                 selected
-                  ? "border-primary bg-primary/5"
+                  ? "border-primary bg-primary/5 shadow-md"
                   : "border-border hover:border-primary/30 hover:bg-accent"
               )}
             >
-              <div className="flex items-center gap-4">
+              {/* Checkbox indicator for multi-select */}
+              <div className="absolute top-4 right-4">
+                <div
+                  className={cn(
+                    "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
+                    selected
+                      ? "bg-primary border-primary"
+                      : "border-muted-foreground/30 bg-background"
+                  )}
+                >
+                  {selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 pr-8">
                 <div
                   className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
-                    selected ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"
+                    selected ? "bg-primary/20" : "bg-primary/10"
                   )}
                 >
                   <option.icon className="w-6 h-6 text-primary" />
@@ -101,35 +116,36 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
                     {option.description}
                   </p>
                 </div>
-                <div onClick={(e) => e.stopPropagation()}>
-                  {connected ? (
-                    <div className="flex items-center gap-2 text-green-600 animate-fade-in">
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                        <Check className="w-5 h-5" />
-                      </div>
-                      <span className="text-sm font-medium">Connected</span>
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => handleConnect(option.id, e)}
-                      disabled={connecting}
-                      className="text-sm font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
-                    >
-                      {connecting ? (
-                        <span className="flex items-center gap-2">
-                          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Connecting...
-                        </span>
-                      ) : (
-                        option.connectLabel
-                      )}
-                    </Button>
-                  )}
-                </div>
               </div>
-            </button>
+
+              {/* Connect action at bottom of card */}
+              <div className="mt-4 pt-3 border-t border-border/50" onClick={(e) => e.stopPropagation()}>
+                {connected ? (
+                  <div className="flex items-center gap-2 text-green-600 animate-fade-in">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm font-medium">Connected</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => handleConnect(option.id, e)}
+                    disabled={connecting}
+                    className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                  >
+                    {connecting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span>Connecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Connect</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
