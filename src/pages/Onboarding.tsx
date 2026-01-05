@@ -19,8 +19,8 @@ const Onboarding = () => {
     setStep(2);
   };
 
-  const handleOutputSelect = (destination: OutputDestination) => {
-    setOutputDestination(destination);
+  const handleOutputContinue = () => {
+    setOutputDestination("notion");
     setStep(3);
   };
 
@@ -56,7 +56,7 @@ const Onboarding = () => {
           {step === 1 && <InputSourceScreen onContinue={handleInputContinue} />}
           {step === 2 && (
             <OutputDestinationScreen
-              onSelect={handleOutputSelect}
+              onContinue={handleOutputContinue}
               onBack={() => setStep(1)}
             />
           )}
