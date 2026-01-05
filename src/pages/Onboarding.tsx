@@ -67,7 +67,7 @@ const Onboarding = () => {
               onBack={() => setStep(2)}
             />
           )}
-          {step === 4 && <SuccessScreen onComplete={handleComplete} />}
+          {step === 4 && <SuccessScreen onComplete={handleComplete} onBack={() => setStep(3)} />}
         </div>
       </div>
     </main>
