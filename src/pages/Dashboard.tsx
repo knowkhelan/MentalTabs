@@ -230,9 +230,16 @@ const Dashboard = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{connection.icon}</span>
-                      <h3 className="font-medium text-foreground">
-                        {connection.name}
-                      </h3>
+                      <div>
+                        <h3 className="font-medium text-foreground">
+                          {connection.name}
+                        </h3>
+                        {connection.lastSync && (
+                          <p className="text-xs text-muted-foreground">
+                            Last sync: {connection.lastSync}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {/* Health badge */}
                     <span
@@ -247,12 +254,6 @@ const Dashboard = () => {
                       {getStatusLabel(connection.status)}
                     </span>
                   </div>
-
-                  {connection.lastSync && (
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Last sync: {connection.lastSync}
-                    </p>
-                  )}
 
                   {connection.connected ? (
                     <div className="flex gap-2">
@@ -316,9 +317,16 @@ const Dashboard = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{connection.icon}</span>
-                      <h3 className="font-medium text-foreground">
-                        {connection.name}
-                      </h3>
+                      <div>
+                        <h3 className="font-medium text-foreground">
+                          {connection.name}
+                        </h3>
+                        {connection.lastSync && (
+                          <p className="text-xs text-muted-foreground">
+                            Last sync: {connection.lastSync}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {/* Health badge */}
                     <span
@@ -333,12 +341,6 @@ const Dashboard = () => {
                       {getStatusLabel(connection.status)}
                     </span>
                   </div>
-
-                  {connection.lastSync && (
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Last sync: {connection.lastSync}
-                    </p>
-                  )}
 
                   {connection.connected ? (
                     <div className="flex gap-2">
