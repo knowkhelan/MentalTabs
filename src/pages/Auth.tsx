@@ -54,10 +54,10 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <button
         onClick={() => navigate("/")}
-        className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-6 left-6 p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-accent"
+        aria-label="Go back"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back
+        <ArrowLeft className="w-5 h-5" />
       </button>
 
       <div className="w-full max-w-md">
@@ -67,7 +67,7 @@ const Auth = () => {
             Mental<span className="text-primary">Tabs</span>
           </h1>
           <p className="text-muted-foreground mt-2">
-            {activeTab === "signin" ? "Welcome back" : "Create your account"}
+            {activeTab === "signin" ? "Sign in to your account" : "Create your account"}
           </p>
         </div>
 
@@ -84,7 +84,7 @@ const Auth = () => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Sign In
+            Login
           </button>
           <button
             onClick={() => {
@@ -194,7 +194,7 @@ const Auth = () => {
                 {isLoading
                   ? "Loading..."
                   : activeTab === "signin"
-                  ? "Sign In"
+                  ? "Login"
                   : "Create Account"}
               </Button>
 
