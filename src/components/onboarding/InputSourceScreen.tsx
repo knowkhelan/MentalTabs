@@ -86,7 +86,7 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
               )}
             >
               {/* Checkbox indicator - click to disconnect */}
-              <div className="absolute top-4 left-4" onClick={(e) => handleCheckboxChange(option.id, e)}>
+              <div className="absolute top-4 right-4" onClick={(e) => handleCheckboxChange(option.id, e)}>
                 <div
                   className={cn(
                     "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
@@ -99,7 +99,7 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 pl-8">
+              <div className="flex items-center gap-4 pr-8">
                 <div
                   className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
