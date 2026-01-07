@@ -1,5 +1,6 @@
-import { Check, Lightbulb, Zap, HelpCircle, ExternalLink, ArrowLeft } from "lucide-react";
+import { Check, Lightbulb, Zap, HelpCircle, LogIn, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface SuccessScreenProps {
   onComplete: () => void;
@@ -13,6 +14,12 @@ const categories = [
 ];
 
 const SuccessScreen = ({ onComplete, onBack }: SuccessScreenProps) => {
+  const navigate = useNavigate();
+
+  const handleLoginSignup = () => {
+    navigate("/auth");
+  };
+
   return (
     <div className="text-center">
       <button
@@ -58,11 +65,11 @@ const SuccessScreen = ({ onComplete, onBack }: SuccessScreenProps) => {
       </div>
 
       <Button
-        onClick={onComplete}
+        onClick={handleLoginSignup}
         className="w-full h-14 text-base font-semibold"
       >
-        Open Notion Dashboard
-        <ExternalLink className="ml-2 w-4 h-4" />
+        Login / Sign Up
+        <LogIn className="ml-2 w-4 h-4" />
       </Button>
     </div>
   );

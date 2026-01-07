@@ -1,0 +1,404 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  MessageSquare,
+  Calendar,
+  TrendingUp,
+  Link2,
+  Plus,
+  User,
+  Settings,
+  LogOut,
+  Edit,
+  Check,
+  X,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+
+// Mock data
+const mockUser = {
+  email: "user@example.com",
+  initials: "U",
+};
+
+const mockStats = {
+  totalMessages: 1247,
+  messagesToday: 23,
+  messagesThisWeek: 156,
+  activeConnections: 3,
+};
+
+const mockConnections = [
+  {
+    id: "slack",
+    name: "Slack",
+    icon: "💬",
+    connected: true,
+    status: "active" as const,
+    lastSync: "2 mins ago",
+  },
+  {
+    id: "outlook",
+    name: "Outlook",
+    icon: "📧",
+    connected: true,
+    status: "active" as const,
+    lastSync: "5 mins ago",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp",
+    icon: "📱",
+    connected: true,
+    status: "needs_attention" as const,
+    lastSync: "1 hour ago",
+  },
+  {
+    id: "notion",
+    name: "Notion",
+    icon: "📝",
+    connected: false,
+    status: "disconnected" as const,
+    lastSync: null,
+  },
+];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "active":
+      return "bg-green-500";
+    case "needs_attention":
+      return "bg-yellow-500";
+    case "disconnected":
+      return "bg-red-500";
+    default:
+      return "bg-muted";
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "active":
+      return "Active";
+    case "needs_attention":
+      return "Needs Attention";
+    case "disconnected":
+      return "Disconnected";
+    default:
+      return "Unknown";
+  }
+};
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const [connections, setConnections] = useState(mockConnections);
+
+  const handleConnect = (id: string) => {
+    setConnections((prev) =>
+      prev.map((conn) =>
+        conn.id === id
+          ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
+          : conn
+      )
+    );
+  };
+
+  const handleRemove = (id: string) => {
+    setConnections((prev) =>
+      prev.map((conn) =>
+        conn.id === id
+          ? { ...conn, connected: false, status: "disconnected" as const, lastSync: null }
+          : conn
+      )
+    );
+  };
+
+  const handleReconnect = (id: string) => {
+    setConnections((prev) =>
+      prev.map((conn) =>
+        conn.id === id
+          ? { ...conn, status: "active" as const, lastSync: "Just now" }
+          : conn
+      )
+    );
+  };
+
+  const handleLogout = () => {
+    navigate("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Top Navigation */}
+      <nav className="border-b border-border bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <h1 className="font-display text-xl font-bold text-foreground">
+              Mental<span className="text-primary">Tabs</span>
+            </h1>
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                    {mockUser.initials}
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {mockUser.email}
+                  </p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Connections Section */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-xl font-semibold text-foreground">
+              Connections
+            </h2>
+            <Button variant="outline" size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Connection
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {connections.map((connection) => (
+              <Card key={connection.id} className="border-border">
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{connection.icon}</span>
+                      <div>
+                        <h3 className="font-medium text-foreground">
+                          {connection.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span
+                            className={`w-2 h-2 rounded-full ${getStatusColor(
+                              connection.status
+                            )}`}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {getStatusLabel(connection.status)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {connection.lastSync && (
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Last sync: {connection.lastSync}
+                    </p>
+                  )}
+
+                  {connection.connected ? (
+                    <div className="flex gap-2">
+                      {connection.status === "needs_attention" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleReconnect(connection.id)}
+                        >
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Reconnect
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleRemove(connection.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleConnect(connection.id)}
+                    >
+                      Connect
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="mb-10">
+          <h2 className="font-display text-xl font-semibold text-foreground mb-6">
+            Statistics
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Total Messages
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-display font-bold text-foreground">
+                  {mockStats.totalMessages.toLocaleString()}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Messages Today
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-display font-bold text-foreground">
+                  {mockStats.messagesToday}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  This Week
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-display font-bold text-foreground">
+                  {mockStats.messagesThisWeek}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Link2 className="w-4 h-4" />
+                  Active Connections
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-display font-bold text-foreground">
+                  {mockStats.activeConnections}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Connection Status Overview */}
+        <section>
+          <h2 className="font-display text-xl font-semibold text-foreground mb-6">
+            Connection Health
+          </h2>
+
+          <Card className="border-border">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {connections.map((connection) => (
+                  <div
+                    key={connection.id}
+                    className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{connection.icon}</span>
+                      <div>
+                        <h4 className="font-medium text-foreground">
+                          {connection.name}
+                        </h4>
+                        {connection.lastSync && (
+                          <p className="text-xs text-muted-foreground">
+                            Last sync: {connection.lastSync}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                          connection.status === "active"
+                            ? "bg-green-100 text-green-700"
+                            : connection.status === "needs_attention"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {connection.status === "active" && (
+                          <Check className="w-3 h-3" />
+                        )}
+                        {connection.status === "needs_attention" && (
+                          <AlertCircle className="w-3 h-3" />
+                        )}
+                        {connection.status === "disconnected" && (
+                          <X className="w-3 h-3" />
+                        )}
+                        {getStatusLabel(connection.status)}
+                      </span>
+
+                      {connection.status === "needs_attention" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReconnect(connection.id)}
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default Dashboard;
