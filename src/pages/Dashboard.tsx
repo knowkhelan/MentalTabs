@@ -270,15 +270,21 @@ const Dashboard = () => {
 
                   {connection.connected ? (
                     <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Settings className="w-3 h-3 mr-1" />
+                        Configure
+                      </Button>
                       {connection.status === "needs_attention" && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
                           onClick={() => handleReconnect(connection.id, "input")}
                         >
-                          <RefreshCw className="w-3 h-3 mr-1" />
-                          Reconnect
+                          <RefreshCw className="w-3 h-3" />
                         </Button>
                       )}
                       <Button
@@ -287,7 +293,7 @@ const Dashboard = () => {
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => handleRemove(connection.id, "input")}
                       >
-                        Remove
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   ) : (
@@ -364,15 +370,21 @@ const Dashboard = () => {
 
                   {connection.connected ? (
                     <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Settings className="w-3 h-3 mr-1" />
+                        Configure
+                      </Button>
                       {connection.status === "needs_attention" && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
                           onClick={() => handleReconnect(connection.id, "data")}
                         >
-                          <RefreshCw className="w-3 h-3 mr-1" />
-                          Reconnect
+                          <RefreshCw className="w-3 h-3" />
                         </Button>
                       )}
                       <Button
@@ -381,7 +393,7 @@ const Dashboard = () => {
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => handleRemove(connection.id, "data")}
                       >
-                        Remove
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   ) : (
