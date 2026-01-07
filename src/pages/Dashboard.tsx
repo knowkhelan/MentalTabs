@@ -25,6 +25,17 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+type ConnectionStatus = "active" | "needs_attention" | "disconnected";
+
+interface Connection {
+  id: string;
+  name: string;
+  icon: string;
+  connected: boolean;
+  status: ConnectionStatus;
+  lastSync: string | null;
+}
+
 // Mock data
 const mockUser = {
   email: "user@example.com",
@@ -38,13 +49,13 @@ const mockStats = {
   activeConnections: 3,
 };
 
-const mockConnections = [
+const mockInputSources: Connection[] = [
   {
     id: "slack",
     name: "Slack",
     icon: "💬",
     connected: true,
-    status: "active" as const,
+    status: "active",
     lastSync: "2 mins ago",
   },
   {
@@ -52,7 +63,7 @@ const mockConnections = [
     name: "Outlook",
     icon: "📧",
     connected: true,
-    status: "active" as const,
+    status: "active",
     lastSync: "5 mins ago",
   },
   {
@@ -60,15 +71,26 @@ const mockConnections = [
     name: "WhatsApp",
     icon: "📱",
     connected: true,
-    status: "needs_attention" as const,
+    status: "needs_attention",
     lastSync: "1 hour ago",
   },
+];
+
+const mockDataSources: Connection[] = [
   {
     id: "notion",
     name: "Notion",
     icon: "📝",
+    connected: true,
+    status: "active",
+    lastSync: "5 mins ago",
+  },
+  {
+    id: "google-sheets",
+    name: "Google Sheets",
+    icon: "📊",
     connected: false,
-    status: "disconnected" as const,
+    status: "disconnected",
     lastSync: null,
   },
 ];
@@ -101,10 +123,12 @@ const getStatusLabel = (status: string) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [connections, setConnections] = useState(mockConnections);
+  const [inputSources, setInputSources] = useState(mockInputSources);
+  const [dataSources, setDataSources] = useState(mockDataSources);
 
-  const handleConnect = (id: string) => {
-    setConnections((prev) =>
+  const handleConnect = (id: string, type: "input" | "data") => {
+    const setter = type === "input" ? setInputSources : setDataSources;
+    setter((prev) =>
       prev.map((conn) =>
         conn.id === id
           ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
@@ -113,8 +137,9 @@ const Dashboard = () => {
     );
   };
 
-  const handleRemove = (id: string) => {
-    setConnections((prev) =>
+  const handleRemove = (id: string, type: "input" | "data") => {
+    const setter = type === "input" ? setInputSources : setDataSources;
+    setter((prev) =>
       prev.map((conn) =>
         conn.id === id
           ? { ...conn, connected: false, status: "disconnected" as const, lastSync: null }
@@ -123,8 +148,9 @@ const Dashboard = () => {
     );
   };
 
-  const handleReconnect = (id: string) => {
-    setConnections((prev) =>
+  const handleReconnect = (id: string, type: "input" | "data") => {
+    const setter = type === "input" ? setInputSources : setDataSources;
+    setter((prev) =>
       prev.map((conn) =>
         conn.id === id
           ? { ...conn, status: "active" as const, lastSync: "Just now" }
@@ -185,7 +211,7 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Connections Section */}
+        {/* Input Sources Section */}
         <section className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-xl font-semibold text-foreground">
@@ -197,8 +223,8 @@ const Dashboard = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {connections.map((connection) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {inputSources.map((connection) => (
               <Card key={connection.id} className="border-border">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
@@ -220,6 +246,20 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
+                    {/* Health badge */}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        connection.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : connection.status === "needs_attention"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {connection.status === "active" && <Check className="w-3 h-3" />}
+                      {connection.status === "needs_attention" && <AlertCircle className="w-3 h-3" />}
+                      {connection.status === "disconnected" && <X className="w-3 h-3" />}
+                    </span>
                   </div>
 
                   {connection.lastSync && (
@@ -235,7 +275,7 @@ const Dashboard = () => {
                           variant="outline"
                           size="sm"
                           className="flex-1"
-                          onClick={() => handleReconnect(connection.id)}
+                          onClick={() => handleReconnect(connection.id, "input")}
                         >
                           <RefreshCw className="w-3 h-3 mr-1" />
                           Reconnect
@@ -245,7 +285,7 @@ const Dashboard = () => {
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemove(connection.id)}
+                        onClick={() => handleRemove(connection.id, "input")}
                       >
                         Remove
                       </Button>
@@ -254,7 +294,101 @@ const Dashboard = () => {
                     <Button
                       size="sm"
                       className="w-full"
-                      onClick={() => handleConnect(connection.id)}
+                      onClick={() => handleConnect(connection.id, "input")}
+                    >
+                      Connect
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Data Sources Section */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-xl font-semibold text-foreground">
+              Data Sources
+            </h2>
+            <Button variant="outline" size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Data Source
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {dataSources.map((connection) => (
+              <Card key={connection.id} className="border-border">
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{connection.icon}</span>
+                      <div>
+                        <h3 className="font-medium text-foreground">
+                          {connection.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span
+                            className={`w-2 h-2 rounded-full ${getStatusColor(
+                              connection.status
+                            )}`}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {getStatusLabel(connection.status)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Health badge */}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        connection.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : connection.status === "needs_attention"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {connection.status === "active" && <Check className="w-3 h-3" />}
+                      {connection.status === "needs_attention" && <AlertCircle className="w-3 h-3" />}
+                      {connection.status === "disconnected" && <X className="w-3 h-3" />}
+                    </span>
+                  </div>
+
+                  {connection.lastSync && (
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Last sync: {connection.lastSync}
+                    </p>
+                  )}
+
+                  {connection.connected ? (
+                    <div className="flex gap-2">
+                      {connection.status === "needs_attention" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleReconnect(connection.id, "data")}
+                        >
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Reconnect
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleRemove(connection.id, "data")}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleConnect(connection.id, "data")}
                     >
                       Connect
                     </Button>
@@ -266,7 +400,7 @@ const Dashboard = () => {
         </section>
 
         {/* Stats Section */}
-        <section className="mb-10">
+        <section>
           <h2 className="font-display text-xl font-semibold text-foreground mb-6">
             Statistics
           </h2>
@@ -328,73 +462,6 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
-        </section>
-
-        {/* Connection Status Overview */}
-        <section>
-          <h2 className="font-display text-xl font-semibold text-foreground mb-6">
-            Connection Health
-          </h2>
-
-          <Card className="border-border">
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                {connections.map((connection) => (
-                  <div
-                    key={connection.id}
-                    className="flex items-center justify-between py-3 border-b border-border last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{connection.icon}</span>
-                      <div>
-                        <h4 className="font-medium text-foreground">
-                          {connection.name}
-                        </h4>
-                        {connection.lastSync && (
-                          <p className="text-xs text-muted-foreground">
-                            Last sync: {connection.lastSync}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                          connection.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : connection.status === "needs_attention"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {connection.status === "active" && (
-                          <Check className="w-3 h-3" />
-                        )}
-                        {connection.status === "needs_attention" && (
-                          <AlertCircle className="w-3 h-3" />
-                        )}
-                        {connection.status === "disconnected" && (
-                          <X className="w-3 h-3" />
-                        )}
-                        {getStatusLabel(connection.status)}
-                      </span>
-
-                      {connection.status === "needs_attention" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleReconnect(connection.id)}
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </section>
       </main>
     </div>
