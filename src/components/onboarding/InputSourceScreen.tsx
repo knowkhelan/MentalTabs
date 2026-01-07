@@ -34,22 +34,25 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
   const [connectedSources, setConnectedSources] = useState<string[]>([]);
   const [connectingSource, setConnectingSource] = useState<string | null>(null);
 
-  const toggleSelection = (id: string) => {
-    setSelectedSources((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
-  };
-
-  const handleConnect = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCardClick = async (id: string) => {
+    // If already connected, do nothing (use checkbox to disconnect)
+    if (connectedSources.includes(id)) return;
+    
+    // Trigger connection
     setConnectingSource(id);
-    
-    // Simulate connection process
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
     setConnectedSources((prev) => [...prev, id]);
     setSelectedSources((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setConnectingSource(null);
+  };
+
+  const handleCheckboxChange = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (connectedSources.includes(id)) {
+      // Disconnect by unchecking
+      setConnectedSources((prev) => prev.filter((s) => s !== id));
+      setSelectedSources((prev) => prev.filter((s) => s !== id));
+    }
   };
 
   const isConnected = (id: string) => connectedSources.includes(id);
@@ -74,29 +77,29 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
           return (
             <div
               key={option.id}
-              onClick={() => toggleSelection(option.id)}
+              onClick={() => handleCardClick(option.id)}
               className={cn(
                 "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 cursor-pointer text-left relative",
-                selected
+                connected
                   ? "border-primary bg-primary/5 shadow-md"
                   : "border-border hover:border-primary/30 hover:bg-accent"
               )}
             >
-              {/* Checkbox indicator for multi-select */}
-              <div className="absolute top-4 right-4">
+              {/* Checkbox indicator - click to disconnect */}
+              <div className="absolute top-4 left-4" onClick={(e) => handleCheckboxChange(option.id, e)}>
                 <div
                   className={cn(
-                    "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
-                    selected
+                    "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer",
+                    connected
                       ? "bg-primary border-primary"
                       : "border-muted-foreground/30 bg-background"
                   )}
                 >
-                  {selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                  {connected && <Check className="w-4 h-4 text-primary-foreground" />}
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 pr-8">
+              <div className="flex items-center gap-4 pl-8">
                 <div
                   className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
@@ -124,7 +127,7 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
                   </div>
                 ) : (
                   <button
-                    onClick={(e) => handleConnect(option.id, e)}
+                    onClick={() => handleCardClick(option.id)}
                     disabled={connecting}
                     className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
                   >
