@@ -1,11 +1,10 @@
-import { ArrowLeft, Send, ExternalLink } from "lucide-react";
+import { Send, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { InputSource } from "@/pages/Onboarding";
 
 interface FirstThoughtScreenProps {
   inputSource: InputSource;
   onComplete: () => void;
-  onBack: () => void;
 }
 
 const examples: Record<NonNullable<InputSource>, { text: string; context: string }> = {
@@ -26,7 +25,6 @@ const examples: Record<NonNullable<InputSource>, { text: string; context: string
 const FirstThoughtScreen = ({
   inputSource,
   onComplete,
-  onBack,
 }: FirstThoughtScreenProps) => {
   const example = inputSource ? examples[inputSource] : examples.slack;
   const sourceName =
@@ -38,13 +36,6 @@ const FirstThoughtScreen = ({
 
   return (
     <div className="text-center">
-      <button
-        onClick={onBack}
-        className="absolute top-6 left-6 p-2 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-      </button>
-
       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-8">
         <Send className="w-8 h-8 text-primary" />
       </div>

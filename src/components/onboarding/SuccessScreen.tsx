@@ -1,10 +1,9 @@
-import { Check, Lightbulb, Zap, HelpCircle, LogIn, ArrowLeft } from "lucide-react";
+import { Check, Lightbulb, Zap, HelpCircle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 interface SuccessScreenProps {
   onComplete: () => void;
-  onBack: () => void;
 }
 
 const categories = [
@@ -13,7 +12,7 @@ const categories = [
   { label: "Curiosity", icon: HelpCircle, color: "text-secondary" },
 ];
 
-const SuccessScreen = ({ onComplete, onBack }: SuccessScreenProps) => {
+const SuccessScreen = ({ onComplete }: SuccessScreenProps) => {
   const navigate = useNavigate();
 
   const handleLoginSignup = () => {
@@ -22,14 +21,6 @@ const SuccessScreen = ({ onComplete, onBack }: SuccessScreenProps) => {
 
   return (
     <div className="text-center">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 mx-auto"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
-
       {/* Success checkmark */}
       <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-8 animate-fade-in">
         <div className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center">

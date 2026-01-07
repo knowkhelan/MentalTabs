@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import InputSourceScreen from "@/components/onboarding/InputSourceScreen";
 import OutputDestinationScreen from "@/components/onboarding/OutputDestinationScreen";
 import FirstThoughtScreen from "@/components/onboarding/FirstThoughtScreen";
@@ -35,39 +36,52 @@ const Onboarding = () => {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-lg">
-        {/* Progress indicator */}
-        <div className="flex justify-center gap-2 mb-12">
-          {[1, 2, 3, 4].map((s) => (
-            <div
-              key={s}
-              className={`h-1.5 rounded-full transition-all duration-500 ${
-                s === step
-                  ? "w-8 bg-primary"
-                  : s < step
-                  ? "w-4 bg-primary/40"
-                  : "w-4 bg-muted"
-              }`}
-            />
-          ))}
+        {/* Progress bar with back button */}
+        <div className="flex items-center justify-center gap-4 mb-12">
+          {/* Back button - only show after step 1 */}
+          <button
+            onClick={() => setStep((prev) => Math.max(1, prev - 1))}
+            className={`p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all ${
+              step === 1 ? "invisible" : ""
+            }`}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          {/* Progress indicator */}
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map((s) => (
+              <div
+                key={s}
+                className={`h-1.5 rounded-full transition-all duration-500 ${
+                  s === step
+                    ? "w-8 bg-primary"
+                    : s < step
+                    ? "w-4 bg-primary/40"
+                    : "w-4 bg-muted"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Spacer to balance the back button */}
+          <div className="w-9" />
         </div>
 
         {/* Screens */}
         <div className="animate-fade-up">
           {step === 1 && <InputSourceScreen onContinue={handleInputContinue} />}
           {step === 2 && (
-            <OutputDestinationScreen
-              onContinue={handleOutputContinue}
-              onBack={() => setStep(1)}
-            />
+            <OutputDestinationScreen onContinue={handleOutputContinue} />
           )}
           {step === 3 && (
             <FirstThoughtScreen
               inputSource={inputSources[0] || "slack"}
               onComplete={handleFirstThoughtSent}
-              onBack={() => setStep(2)}
             />
           )}
-          {step === 4 && <SuccessScreen onComplete={handleComplete} onBack={() => setStep(3)} />}
+          {step === 4 && <SuccessScreen onComplete={handleComplete} />}
         </div>
       </div>
     </main>

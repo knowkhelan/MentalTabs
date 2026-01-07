@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { FileText, Table, ArrowLeft, Check, Plus } from "lucide-react";
+import { FileText, Table, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface OutputDestinationScreenProps {
   onContinue: () => void;
-  onBack: () => void;
 }
 
 const outputOptions = [
@@ -25,7 +24,6 @@ const outputOptions = [
 
 const OutputDestinationScreen = ({
   onContinue,
-  onBack,
 }: OutputDestinationScreenProps) => {
   const [connectedDestinations, setConnectedDestinations] = useState<string[]>([]);
   const [connectingDestination, setConnectingDestination] = useState<string | null>(null);
@@ -54,14 +52,6 @@ const OutputDestinationScreen = ({
 
   return (
     <div className="text-center">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm">Back</span>
-      </button>
-
       <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
         Where should we keep things organized?
       </h1>
