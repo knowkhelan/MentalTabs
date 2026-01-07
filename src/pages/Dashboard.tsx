@@ -230,25 +230,13 @@ const Dashboard = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{connection.icon}</span>
-                      <div>
-                        <h3 className="font-medium text-foreground">
-                          {connection.name}
-                        </h3>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span
-                            className={`w-2 h-2 rounded-full ${getStatusColor(
-                              connection.status
-                            )}`}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            {getStatusLabel(connection.status)}
-                          </span>
-                        </div>
-                      </div>
+                      <h3 className="font-medium text-foreground">
+                        {connection.name}
+                      </h3>
                     </div>
                     {/* Health badge */}
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                         connection.status === "active"
                           ? "bg-green-100 text-green-700"
                           : connection.status === "needs_attention"
@@ -256,9 +244,7 @@ const Dashboard = () => {
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {connection.status === "active" && <Check className="w-3 h-3" />}
-                      {connection.status === "needs_attention" && <AlertCircle className="w-3 h-3" />}
-                      {connection.status === "disconnected" && <X className="w-3 h-3" />}
+                      {getStatusLabel(connection.status)}
                     </span>
                   </div>
 
@@ -330,25 +316,13 @@ const Dashboard = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{connection.icon}</span>
-                      <div>
-                        <h3 className="font-medium text-foreground">
-                          {connection.name}
-                        </h3>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span
-                            className={`w-2 h-2 rounded-full ${getStatusColor(
-                              connection.status
-                            )}`}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            {getStatusLabel(connection.status)}
-                          </span>
-                        </div>
-                      </div>
+                      <h3 className="font-medium text-foreground">
+                        {connection.name}
+                      </h3>
                     </div>
                     {/* Health badge */}
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                         connection.status === "active"
                           ? "bg-green-100 text-green-700"
                           : connection.status === "needs_attention"
@@ -356,9 +330,7 @@ const Dashboard = () => {
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {connection.status === "active" && <Check className="w-3 h-3" />}
-                      {connection.status === "needs_attention" && <AlertCircle className="w-3 h-3" />}
-                      {connection.status === "disconnected" && <X className="w-3 h-3" />}
+                      {getStatusLabel(connection.status)}
                     </span>
                   </div>
 
