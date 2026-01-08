@@ -34,7 +34,7 @@ const outputOptions = [
 
 const columnOptions = [
   { id: "title", label: "Title" },
-  { id: "status", label: "Status (Status/Select)" },
+  { id: "status", label: "Status" },
   { id: "type", label: "Type" },
   { id: "priority", label: "Priority" },
   { id: "date-created", label: "Date Created" },
