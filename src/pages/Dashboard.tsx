@@ -15,15 +15,13 @@ import {
   TrendingUp,
   Link2,
   Plus,
-  User,
   Settings,
   LogOut,
   Edit,
-  Check,
   X,
-  AlertCircle,
   RefreshCw,
 } from "lucide-react";
+import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
 
@@ -125,6 +123,30 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [inputSources, setInputSources] = useState(mockInputSources);
   const [dataSources, setDataSources] = useState(mockDataSources);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [configDialogSource, setConfigDialogSource] = useState<string | null>(null);
+  const [columnConfigs, setColumnConfigs] = useState<Record<string, string[]>>({
+    notion: ["title", "status", "date-created"],
+    "google-sheets": ["title", "status", "date-created"],
+  });
+
+  const handleOpenConfig = (id: string) => {
+    setConfigDialogSource(id);
+    setConfigDialogOpen(true);
+  };
+
+  const handleSaveColumns = (columns: string[]) => {
+    if (configDialogSource) {
+      setColumnConfigs((prev) => ({
+        ...prev,
+        [configDialogSource]: columns,
+      }));
+    }
+  };
+
+  const getSourceName = (id: string | null) => {
+    return dataSources.find((s) => s.id === id)?.name || "";
+  };
 
   const handleConnect = (id: string, type: "input" | "data") => {
     const setter = type === "input" ? setInputSources : setDataSources;
@@ -348,6 +370,7 @@ const Dashboard = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
+                        onClick={() => handleOpenConfig(connection.id)}
                       >
                         <Settings className="w-3 h-3 mr-1" />
                         Configure
@@ -384,6 +407,15 @@ const Dashboard = () => {
             ))}
           </div>
         </section>
+
+        {/* Columns Config Dialog */}
+        <ColumnsConfigDialog
+          open={configDialogOpen}
+          onOpenChange={setConfigDialogOpen}
+          destinationName={getSourceName(configDialogSource)}
+          selectedColumns={configDialogSource ? columnConfigs[configDialogSource] || [] : []}
+          onSave={handleSaveColumns}
+        />
 
         {/* Stats Section */}
         <section>
