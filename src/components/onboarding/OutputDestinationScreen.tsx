@@ -41,6 +41,7 @@ const columnOptions = [
   { id: "due-date", label: "Due Date (Date)" },
   { id: "context", label: "Context" },
   { id: "description", label: "Description field" },
+  { id: "source", label: "Source" },
 ];
 
 const OutputDestinationScreen = ({
