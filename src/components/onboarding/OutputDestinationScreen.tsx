@@ -2,6 +2,16 @@ import { useState } from "react";
 import { FileText, Table, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface OutputDestinationScreenProps {
   onContinue: () => void;
@@ -22,29 +32,60 @@ const outputOptions = [
   },
 ];
 
+const columnOptions = [
+  { id: "title", label: "Title" },
+  { id: "status", label: "Status (Status/Select)" },
+  { id: "type", label: "Type" },
+  { id: "priority", label: "Priority" },
+  { id: "date-created", label: "Date Created" },
+  { id: "due-date", label: "Due Date (Date)" },
+  { id: "context", label: "Context" },
+  { id: "description", label: "Description field" },
+];
+
 const OutputDestinationScreen = ({
   onContinue,
 }: OutputDestinationScreenProps) => {
   const [connectedDestinations, setConnectedDestinations] = useState<string[]>([]);
-  const [connectingDestination, setConnectingDestination] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([
+    "title",
+    "status",
+    "date-created",
+  ]);
 
-  const handleCardClick = async (id: string) => {
-    // If already connected, do nothing (use checkbox to disconnect)
+  const handleCardClick = (id: string) => {
     if (connectedDestinations.includes(id)) return;
-
-    // Trigger connection
-    setConnectingDestination(id);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setConnectedDestinations((prev) => [...prev, id]);
-    setConnectingDestination(null);
+    setSelectedDestination(id);
+    setDialogOpen(true);
   };
 
   const handleCheckboxChange = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (connectedDestinations.includes(id)) {
-      // Disconnect by unchecking
       setConnectedDestinations((prev) => prev.filter((s) => s !== id));
     }
+  };
+
+  const handleColumnToggle = (columnId: string) => {
+    setSelectedColumns((prev) =>
+      prev.includes(columnId)
+        ? prev.filter((c) => c !== columnId)
+        : [...prev, columnId]
+    );
+  };
+
+  const handleConfirmColumns = () => {
+    if (selectedDestination) {
+      setConnectedDestinations((prev) => [...prev, selectedDestination]);
+    }
+    setDialogOpen(false);
+    setSelectedDestination(null);
+  };
+
+  const getDestinationName = (id: string | null) => {
+    return outputOptions.find((d) => d.id === id)?.label || "";
   };
 
   const isConnected = (id: string) => connectedDestinations.includes(id);
@@ -62,7 +103,6 @@ const OutputDestinationScreen = ({
       <div className="space-y-3 mb-8">
         {outputOptions.map((option) => {
           const connected = isConnected(option.id);
-          const connecting = connectingDestination === option.id;
 
           return (
             <div
@@ -118,20 +158,10 @@ const OutputDestinationScreen = ({
                 ) : (
                   <button
                     onClick={() => handleCardClick(option.id)}
-                    disabled={connecting}
-                    className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                   >
-                    {connecting ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        <span>Connecting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4" />
-                        <span>Connect</span>
-                      </>
-                    )}
+                    <Plus className="w-4 h-4" />
+                    <span>Connect</span>
                   </button>
                 )}
               </div>
@@ -151,6 +181,45 @@ const OutputDestinationScreen = ({
       <p className="text-sm text-muted-foreground">
         You can change this anytime in settings.
       </p>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Configure {getDestinationName(selectedDestination)} Columns</DialogTitle>
+            <DialogDescription>
+              Select which columns to enable in your storage.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4 max-h-[300px] overflow-y-auto">
+            {columnOptions.map((column) => (
+              <div
+                key={column.id}
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent/50 transition-colors"
+              >
+                <Checkbox
+                  id={column.id}
+                  checked={selectedColumns.includes(column.id)}
+                  onCheckedChange={() => handleColumnToggle(column.id)}
+                />
+                <Label
+                  htmlFor={column.id}
+                  className="flex-1 cursor-pointer text-sm font-medium"
+                >
+                  {column.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmColumns} disabled={selectedColumns.length === 0}>
+              Connect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
