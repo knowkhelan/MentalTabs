@@ -38,7 +38,7 @@ const columnOptions = [
   { id: "type", label: "Type" },
   { id: "priority", label: "Priority" },
   { id: "date-created", label: "Date Created" },
-  { id: "due-date", label: "Due Date (Date)" },
+  { id: "due-date", label: "Due Date" },
   { id: "context", label: "Context" },
   { id: "description", label: "Description field" },
   { id: "source", label: "Source" },
