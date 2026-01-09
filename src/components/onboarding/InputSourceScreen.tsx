@@ -2,9 +2,9 @@ import { useState } from "react";
 import { MessageSquare, MessageCircle, Mail, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import IntegrationWizardDialog from "./IntegrationWizardDialog";
+import IntegrationWizardDialog, { type IntegrationType } from "./IntegrationWizardDialog";
 
-type IntegrationType = "slack" | "whatsapp" | "email";
+type SourceType = "slack" | "whatsapp" | "email";
 
 interface InputSourceScreenProps {
   onContinue: (sources: string[]) => void;
@@ -12,19 +12,19 @@ interface InputSourceScreenProps {
 
 const inputOptions = [
   {
-    id: "slack" as IntegrationType,
+    id: "slack" as SourceType,
     label: "Slack",
     icon: MessageSquare,
     description: "Quick messages to yourself",
   },
   {
-    id: "whatsapp" as IntegrationType,
+    id: "whatsapp" as SourceType,
     label: "WhatsApp",
     icon: MessageCircle,
     description: "Voice notes & quick texts",
   },
   {
-    id: "email" as IntegrationType,
+    id: "email" as SourceType,
     label: "Email",
     icon: Mail,
     description: "Send thoughts anytime",
@@ -32,27 +32,28 @@ const inputOptions = [
 ];
 
 const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
-  const [selectedSources, setSelectedSources] = useState<IntegrationType[]>([]);
-  const [connectedSources, setConnectedSources] = useState<IntegrationType[]>([]);
+  const [selectedSources, setSelectedSources] = useState<SourceType[]>([]);
+  const [connectedSources, setConnectedSources] = useState<SourceType[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeIntegration, setActiveIntegration] = useState<IntegrationType | null>(null);
 
-  const handleConnectClick = (id: IntegrationType) => {
+  const handleConnectClick = (id: SourceType) => {
     if (connectedSources.includes(id)) return;
     setActiveIntegration(id);
     setWizardOpen(true);
   };
 
   const handleWizardConnect = () => {
-    if (activeIntegration) {
-      setConnectedSources((prev) => [...prev, activeIntegration]);
+    if (activeIntegration && (activeIntegration === "slack" || activeIntegration === "whatsapp" || activeIntegration === "email")) {
+      const source = activeIntegration as SourceType;
+      setConnectedSources((prev) => [...prev, source]);
       setSelectedSources((prev) => 
-        prev.includes(activeIntegration) ? prev : [...prev, activeIntegration]
+        prev.includes(source) ? prev : [...prev, source]
       );
     }
   };
 
-  const handleCheckboxChange = (id: IntegrationType, e: React.MouseEvent) => {
+  const handleCheckboxChange = (id: SourceType, e: React.MouseEvent) => {
     e.stopPropagation();
     if (connectedSources.includes(id)) {
       setConnectedSources((prev) => prev.filter((s) => s !== id));
@@ -60,13 +61,19 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
     }
   };
 
-  const isConnected = (id: IntegrationType) => connectedSources.includes(id);
-  const isSelected = (id: IntegrationType) => selectedSources.includes(id);
+  const isConnected = (id: SourceType) => connectedSources.includes(id);
+  const isSelected = (id: SourceType) => selectedSources.includes(id);
   const hasConnectedSource = connectedSources.length > 0;
 
   return (
     <>
       <div className="text-center">
+        <div className="inline-flex items-center gap-2 bg-secondary/50 text-secondary-foreground text-xs font-medium px-3 py-1 rounded-full mb-4">
+          <span>Step 2</span>
+          <span className="opacity-60">•</span>
+          <span>Connect your sources</span>
+        </div>
+
         <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
           Where do thoughts usually show up for you?
         </h1>

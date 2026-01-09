@@ -3,18 +3,22 @@ import {
   MessageSquare, 
   MessageCircle, 
   Mail, 
-  QrCode, 
+  FileText,
+  Table,
   Bot, 
   Smile, 
   Download, 
-  Send as SendIcon, 
-  Hash, 
-  ScanLine, 
-  ShieldCheck, 
   Forward,
   Copy,
   Check,
-  ExternalLink
+  ExternalLink,
+  Hash,
+  AtSign,
+  Database,
+  Link,
+  Send as SendIcon,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import {
   Dialog,
@@ -27,7 +31,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
-type IntegrationType = "slack" | "whatsapp" | "email";
+export type IntegrationType = "slack" | "whatsapp" | "email" | "notion" | "google-sheets";
 
 interface IntegrationWizardDialogProps {
   open: boolean;
@@ -37,14 +41,13 @@ interface IntegrationWizardDialogProps {
 }
 
 interface StepItemProps {
-  number: number;
   icon: React.ReactNode;
   title: string;
   description: React.ReactNode;
   accentColor?: string;
 }
 
-const StepItem = ({ number, icon, title, description, accentColor = "bg-primary/10 text-primary" }: StepItemProps) => (
+const StepItem = ({ icon, title, description, accentColor = "bg-primary/10 text-primary" }: StepItemProps) => (
   <div className="flex gap-3">
     <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", accentColor)}>
       {icon}
@@ -54,6 +57,109 @@ const StepItem = ({ number, icon, title, description, accentColor = "bg-primary/
       <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
     </div>
   </div>
+);
+
+// Notion Action & Steps
+const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
+  <>
+    {/* Action Area */}
+    <div className="p-6 bg-card">
+      <Button
+        onClick={onConnect}
+        disabled={isConnecting}
+        className="w-full h-12 font-semibold bg-foreground hover:bg-foreground/90 text-background"
+      >
+        {isConnecting ? (
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            Connecting...
+          </span>
+        ) : (
+          <>
+            <Database className="w-5 h-5 mr-2" />
+            Select Database
+          </>
+        )}
+      </Button>
+    </div>
+
+    <Separator />
+
+    {/* How to Setup & Use */}
+    <div className="p-6 bg-muted/30">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Setup Steps</h3>
+      <div className="space-y-4">
+        <StepItem
+          icon={<LogIn className="w-4 h-4" />}
+          title="Login"
+          description="Authorize your Notion account."
+        />
+        <StepItem
+          icon={<Database className="w-4 h-4" />}
+          title="Select Database"
+          description="Choose the specific database where you want your thoughts to appear."
+        />
+        <StepItem
+          icon={<UserPlus className="w-4 h-4" />}
+          title="Add Connection"
+          description={<>Click <span className="font-medium">"Add connections"</span> in the database settings to allow our integration to write to it.</>}
+        />
+      </div>
+    </div>
+  </>
+);
+
+// Google Sheets Action & Steps
+const GoogleSheetsContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
+  <>
+    {/* Action Area */}
+    <div className="p-6 bg-card">
+      <Button
+        onClick={onConnect}
+        disabled={isConnecting}
+        className="w-full h-12 font-semibold bg-[#0F9D58] hover:bg-[#0d8a4d] text-white"
+      >
+        {isConnecting ? (
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            Connecting...
+          </span>
+        ) : (
+          <>
+            <Table className="w-5 h-5 mr-2" />
+            Connect Google Account
+          </>
+        )}
+      </Button>
+    </div>
+
+    <Separator />
+
+    {/* How to Setup & Use */}
+    <div className="p-6 bg-muted/30">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Setup Steps</h3>
+      <div className="space-y-4">
+        <StepItem
+          icon={<LogIn className="w-4 h-4" />}
+          title="Login"
+          description="Sign in with your Google account."
+          accentColor="bg-[#0F9D58]/10 text-[#0F9D58]"
+        />
+        <StepItem
+          icon={<Table className="w-4 h-4" />}
+          title="Select Spreadsheet"
+          description="Choose an existing spreadsheet or create a new one for your thoughts."
+          accentColor="bg-[#0F9D58]/10 text-[#0F9D58]"
+        />
+        <StepItem
+          icon={<Link className="w-4 h-4" />}
+          title="Grant Access"
+          description="Allow our app to write to your selected spreadsheet."
+          accentColor="bg-[#0F9D58]/10 text-[#0F9D58]"
+        />
+      </div>
+    </div>
+  </>
 );
 
 // Slack Action & Steps
@@ -69,12 +175,12 @@ const SlackContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
         {isConnecting ? (
           <span className="flex items-center gap-2">
             <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Authorizing...
+            Installing...
           </span>
         ) : (
           <>
-            <MessageSquare className="w-5 h-5 mr-2" />
-            Authorize Slack Bot
+            <Download className="w-5 h-5 mr-2" />
+            Install App
           </>
         )}
       </Button>
@@ -84,27 +190,30 @@ const SlackContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
 
     {/* How to Setup & Use */}
     <div className="p-6 bg-muted/30">
-      <h3 className="text-sm font-semibold text-foreground mb-4">How to Setup & Use</h3>
+      <h3 className="text-sm font-semibold text-foreground mb-4">How it Works</h3>
       <div className="space-y-4">
         <StepItem
-          number={1}
           icon={<Download className="w-4 h-4" />}
           title="Install"
-          description="Click the button above to add our bot to your workspace."
+          description={<>Click on <span className="font-medium">"Install"</span> above to add our app to your workspace.</>}
           accentColor="bg-[#4A154B]/10 text-[#4A154B]"
         />
         <StepItem
-          number={2}
           icon={<Bot className="w-4 h-4" />}
-          title="Direct Save"
-          description={<>Simply send a DM to <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">@NotionBot</span> to save thoughts privately.</>}
+          title="Direct Message"
+          description="DM the bot to save private thoughts."
           accentColor="bg-[#4A154B]/10 text-[#4A154B]"
         />
         <StepItem
-          number={3}
           icon={<Smile className="w-4 h-4" />}
           title="Emoji Trigger"
-          description={<>React to <em>any</em> message in your channels with the 💾 emoji (or a custom one you choose) to instantly save it to your database.</>}
+          description={<>React with a saved emoji (e.g., 💾) to save any message.</>}
+          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
+        />
+        <StepItem
+          icon={<AtSign className="w-4 h-4" />}
+          title="Tagging"
+          description="Mention the bot in a channel to save that specific conversation."
           accentColor="bg-[#4A154B]/10 text-[#4A154B]"
         />
       </div>
@@ -165,25 +274,22 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
 
       {/* How to Setup & Use */}
       <div className="p-6 bg-muted/30">
-        <h3 className="text-sm font-semibold text-foreground mb-4">How to Setup & Use</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">How it Works</h3>
         <div className="space-y-4">
           <StepItem
-            number={1}
             icon={<Download className="w-4 h-4" />}
             title="Save Contact"
-            description={<>Add the address above to your contacts as <span className="font-medium">"My Notion Brain"</span>.</>}
+            description={<>Save this address as <span className="font-medium">"My Notes"</span>.</>}
           />
           <StepItem
-            number={2}
-            icon={<SendIcon className="w-4 h-4" />}
-            title="Direct Note"
-            description="Send a new email to this address to create a new entry."
+            icon={<Forward className="w-4 h-4" />}
+            title="Forwarding"
+            description="Forward emails to this address."
           />
           <StepItem
-            number={3}
             icon={<Hash className="w-4 h-4" />}
-            title="Smart Tagging"
-            description={<>Forward any email to us. If you add the tag <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">#save</span> in the subject line or body, we will strip the rest and only save the tagged content.</>}
+            title="Tags"
+            description={<>Add tags (like <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">#ideas</span>) in the subject line to categorize them automatically in Notion.</>}
           />
         </div>
       </div>
@@ -192,24 +298,24 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
 };
 
 // WhatsApp Action & Steps
-const WhatsAppContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
-  <>
-    {/* Action Area */}
-    <div className="p-6 bg-card">
-      <div className="flex flex-col items-center gap-4">
-        {/* QR Code */}
-        <div className="w-36 h-36 bg-white rounded-xl flex items-center justify-center border-2 border-[#25D366]/20 shadow-sm">
-          <QrCode className="w-24 h-24 text-[#25D366]" />
-        </div>
-        
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>or</span>
-        </div>
+const WhatsAppContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => {
+  const whatsappNumber = "+15550199";
+  const prefilledMessage = "Hi! I want to connect my account to Mental Tabs.";
+  const waLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(prefilledMessage)}`;
 
+  const handleSendMessage = () => {
+    window.open(waLink, "_blank");
+    onConnect();
+  };
+
+  return (
+    <>
+      {/* Action Area */}
+      <div className="p-6 bg-card">
         <Button
-          onClick={onConnect}
+          onClick={handleSendMessage}
           disabled={isConnecting}
-          className="w-full h-11 font-semibold bg-[#25D366] hover:bg-[#1da851] text-white"
+          className="w-full h-12 font-semibold bg-[#25D366] hover:bg-[#1da851] text-white"
         >
           {isConnecting ? (
             <span className="flex items-center gap-2">
@@ -218,64 +324,81 @@ const WhatsAppContent = ({ onConnect, isConnecting }: { onConnect: () => void; i
             </span>
           ) : (
             <>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Click to Chat
+              <ExternalLink className="w-5 h-5 mr-2" />
+              Send Connection Message
             </>
           )}
         </Button>
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Opens WhatsApp with a pre-filled message
+        </p>
       </div>
-    </div>
 
-    <Separator />
+      <Separator />
 
-    {/* How to Setup & Use */}
-    <div className="p-6 bg-muted/30">
-      <h3 className="text-sm font-semibold text-foreground mb-4">How to Setup & Use</h3>
-      <div className="space-y-4">
-        <StepItem
-          number={1}
-          icon={<ScanLine className="w-4 h-4" />}
-          title="Connect"
-          description="Scan the QR code or click the link to open our chat."
-          accentColor="bg-[#25D366]/10 text-[#25D366]"
-        />
-        <StepItem
-          number={2}
-          icon={<ShieldCheck className="w-4 h-4" />}
-          title="Verify"
-          description={<>Send the code <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">START</span> to confirm your number.</>}
-          accentColor="bg-[#25D366]/10 text-[#25D366]"
-        />
-        <StepItem
-          number={3}
-          icon={<Forward className="w-4 h-4" />}
-          title="Capture"
-          description={<>Type a message, send a voice note, or <strong>Forward</strong> any message from another chat to us to save it instantly.</>}
-          accentColor="bg-[#25D366]/10 text-[#25D366]"
-        />
+      {/* How to Setup & Use */}
+      <div className="p-6 bg-muted/30">
+        <h3 className="text-sm font-semibold text-foreground mb-4">How it Works</h3>
+        <div className="space-y-4">
+          <StepItem
+            icon={<SendIcon className="w-4 h-4" />}
+            title="Initiate"
+            description="Click the button above. It will open WhatsApp with a pre-filled message."
+            accentColor="bg-[#25D366]/10 text-[#25D366]"
+          />
+          <StepItem
+            icon={<MessageCircle className="w-4 h-4" />}
+            title="Send"
+            description={<>Send that message to the number <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">+1 555-0199</span>.</>}
+            accentColor="bg-[#25D366]/10 text-[#25D366]"
+          />
+          <StepItem
+            icon={<Forward className="w-4 h-4" />}
+            title="Save"
+            description="Once verified, you can text, voice note, or forward messages to this chat to save them."
+            accentColor="bg-[#25D366]/10 text-[#25D366]"
+          />
+        </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
+};
 
 const integrationConfigs = {
+  notion: {
+    icon: FileText,
+    title: "Connect Your Notion",
+    iconBg: "bg-foreground/10",
+    iconColor: "text-foreground",
+    isDestination: true,
+  },
+  "google-sheets": {
+    icon: Table,
+    title: "Connect Google Sheets",
+    iconBg: "bg-[#0F9D58]/10",
+    iconColor: "text-[#0F9D58]",
+    isDestination: true,
+  },
   slack: {
     icon: MessageSquare,
-    title: "Connect Slack Workspace",
+    title: "Connect Slack",
     iconBg: "bg-[#4A154B]/10",
     iconColor: "text-[#4A154B]",
+    isDestination: false,
   },
   whatsapp: {
     icon: MessageCircle,
     title: "Connect WhatsApp",
     iconBg: "bg-[#25D366]/10",
     iconColor: "text-[#25D366]",
+    isDestination: false,
   },
   email: {
     icon: Mail,
     title: "Connect Email",
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
+    isDestination: false,
   },
 };
 
@@ -309,13 +432,22 @@ const IntegrationWizardDialog = ({
             <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", config.iconBg)}>
               <IconComponent className={cn("w-6 h-6", config.iconColor)} />
             </div>
-            <DialogTitle className="text-xl font-display">
-              {config.title}
-            </DialogTitle>
+            <div>
+              <DialogTitle className="text-xl font-display">
+                {config.title}
+              </DialogTitle>
+              {config.isDestination && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full mt-1 inline-block">
+                  Destination
+                </span>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
         {/* Content based on integration type */}
+        {integration === "notion" && <NotionContent onConnect={handleConnect} isConnecting={isConnecting} />}
+        {integration === "google-sheets" && <GoogleSheetsContent onConnect={handleConnect} isConnecting={isConnecting} />}
         {integration === "slack" && <SlackContent onConnect={handleConnect} isConnecting={isConnecting} />}
         {integration === "whatsapp" && <WhatsAppContent onConnect={handleConnect} isConnecting={isConnecting} />}
         {integration === "email" && <EmailContent onConnect={handleConnect} isConnecting={isConnecting} />}
