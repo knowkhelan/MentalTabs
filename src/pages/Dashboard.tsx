@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +48,14 @@ const mockStats = {
 };
 
 const mockInputSources: Connection[] = [
+  {
+    id: "gmail",
+    name: "Gmail",
+    icon: "📧",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
+  },
   {
     id: "slack",
     name: "Slack",
@@ -121,6 +129,7 @@ const getStatusLabel = (status: string) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [inputSources, setInputSources] = useState(mockInputSources);
   const [dataSources, setDataSources] = useState(mockDataSources);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
@@ -129,6 +138,51 @@ const Dashboard = () => {
     notion: ["title", "status", "date-created"],
     "google-sheets": ["title", "status", "date-created"],
   });
+
+  // Check OAuth status on mount and handle OAuth callback
+  useEffect(() => {
+    const oauthStatus = searchParams.get("oauth");
+    const oauthError = searchParams.get("error");
+
+    if (oauthStatus === "success") {
+      // Update Gmail connection status
+      setInputSources((prev) =>
+        prev.map((conn) =>
+          conn.id === "gmail"
+            ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
+            : conn
+        )
+      );
+      // Clean up URL
+      navigate("/dashboard", { replace: true });
+    } else if (oauthError) {
+      console.error("OAuth error:", oauthError);
+      // Clean up URL
+      navigate("/dashboard", { replace: true });
+    }
+
+    // Check connection status from backend
+    const checkConnectionStatus = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/auth/status");
+        const data = await response.json();
+        if (data.connected) {
+          setInputSources((prev) =>
+            prev.map((conn) =>
+              conn.id === "gmail"
+                ? { ...conn, connected: true, status: "active" as const, lastSync: "Connected" }
+                : conn
+            )
+          );
+        }
+      } catch (error) {
+        // Backend might not be running, ignore error
+        console.log("Could not check connection status:", error);
+      }
+    };
+
+    checkConnectionStatus();
+  }, [searchParams, navigate]);
 
   const handleOpenConfig = (id: string) => {
     setConfigDialogSource(id);
@@ -149,6 +203,14 @@ const Dashboard = () => {
   };
 
   const handleConnect = (id: string, type: "input" | "data") => {
+    // Special handling for Gmail OAuth flow
+    if (id === "gmail" && type === "input") {
+      // Redirect to backend OAuth endpoint with returnTo parameter
+      const returnTo = window.location.pathname; // /dashboard
+      window.location.href = `http://localhost:5000/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+      return;
+    }
+
     const setter = type === "input" ? setInputSources : setDataSources;
     setter((prev) =>
       prev.map((conn) =>
