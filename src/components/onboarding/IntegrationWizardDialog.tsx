@@ -221,51 +221,34 @@ const SlackContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
   </>
 );
 
-// Email Action & Steps
+// Email Action & Steps (Gmail OAuth)
 const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => {
-  const [copied, setCopied] = useState(false);
-  const generatedEmail = "save+user123@mentaltabs.com";
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedEmail);
-    setCopied(true);
-    toast({ title: "Email copied!", description: "Address copied to clipboard." });
-    setTimeout(() => setCopied(false), 2000);
+  const handleGmailConnect = () => {
+    // Redirect to backend OAuth endpoint with returnTo parameter
+    // This ensures we return to onboarding after OAuth completes
+    const returnTo = window.location.pathname; // e.g., /onboarding
+    window.location.href = `http://localhost:5000/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   return (
     <>
       {/* Action Area */}
       <div className="p-6 bg-card">
-        <p className="text-sm text-muted-foreground mb-3 text-center">Your unique capture address:</p>
-        <div className="flex items-center gap-2 bg-muted rounded-lg p-3 border">
-          <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-          <span className="font-mono text-sm text-foreground flex-1 truncate">{generatedEmail}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className="flex-shrink-0 h-8 px-3"
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-green-600" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
         <Button
-          onClick={onConnect}
+          onClick={handleGmailConnect}
           disabled={isConnecting}
-          className="w-full h-10 mt-3 font-medium"
+          className="w-full h-12 font-semibold bg-[#EA4335] hover:bg-[#d33b2c] text-white"
         >
           {isConnecting ? (
             <span className="flex items-center gap-2">
               <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Activating...
+              Connecting...
             </span>
           ) : (
-            "Activate Email Capture"
+            <>
+              <Mail className="w-5 h-5 mr-2" />
+              Connect Gmail
+            </>
           )}
         </Button>
       </div>
@@ -274,22 +257,25 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
 
       {/* How to Setup & Use */}
       <div className="p-6 bg-muted/30">
-        <h3 className="text-sm font-semibold text-foreground mb-4">How it Works</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">Setup Steps</h3>
         <div className="space-y-4">
           <StepItem
-            icon={<Download className="w-4 h-4" />}
-            title="Save Contact"
-            description={<>Save this address as <span className="font-medium">"My Notes"</span>.</>}
+            icon={<LogIn className="w-4 h-4" />}
+            title="Sign In"
+            description="Click 'Connect Gmail' to sign in with your Google account."
+            accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
           <StepItem
-            icon={<Forward className="w-4 h-4" />}
-            title="Forwarding"
-            description="Forward emails to this address."
+            icon={<Mail className="w-4 h-4" />}
+            title="Authorize Access"
+            description="Grant permission to read your Gmail inbox (read-only access)."
+            accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
           <StepItem
-            icon={<Hash className="w-4 h-4" />}
-            title="Tags"
-            description={<>Add tags (like <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">#ideas</span>) in the subject line to categorize them automatically in Notion.</>}
+            icon={<Check className="w-4 h-4" />}
+            title="Automatic Sync"
+            description="Your emails will be automatically synced and organized in Mental Tabs."
+            accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
         </div>
       </div>

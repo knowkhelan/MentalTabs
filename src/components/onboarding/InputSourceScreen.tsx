@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { MessageSquare, MessageCircle, Mail, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,10 +33,24 @@ const inputOptions = [
 ];
 
 const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
+  const [searchParams] = useSearchParams();
   const [selectedSources, setSelectedSources] = useState<SourceType[]>([]);
   const [connectedSources, setConnectedSources] = useState<SourceType[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeIntegration, setActiveIntegration] = useState<IntegrationType | null>(null);
+
+  // Handle OAuth callback - mark email as connected if OAuth was successful
+  useEffect(() => {
+    const oauthStatus = searchParams.get("oauth");
+    if (oauthStatus === "success" && !connectedSources.includes("email")) {
+      setConnectedSources((prev) => [...prev, "email"]);
+      setSelectedSources((prev) => 
+        prev.includes("email") ? prev : [...prev, "email"]
+      );
+      // Close wizard if it's open
+      setWizardOpen(false);
+    }
+  }, [searchParams, connectedSources]);
 
   const handleConnectClick = (id: SourceType) => {
     if (connectedSources.includes(id)) return;

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import InputSourceScreen from "@/components/onboarding/InputSourceScreen";
 import OutputDestinationScreen from "@/components/onboarding/OutputDestinationScreen";
@@ -11,9 +11,27 @@ export type OutputDestination = "notion" | "mental-tab" | null;
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [inputSources, setInputSources] = useState<InputSource[]>([]);
   const [outputDestination, setOutputDestination] = useState<OutputDestination>(null);
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const oauthStatus = searchParams.get("oauth");
+    const oauthError = searchParams.get("error");
+
+    if (oauthStatus === "success") {
+      // OAuth successful - email source should be marked as connected
+      // The InputSourceScreen component will handle updating its state
+      // Clean up URL
+      navigate("/onboarding", { replace: true });
+    } else if (oauthError) {
+      console.error("OAuth error:", oauthError);
+      // Clean up URL
+      navigate("/onboarding", { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   const handleInputContinue = (sources: string[]) => {
     setInputSources(sources as InputSource[]);
