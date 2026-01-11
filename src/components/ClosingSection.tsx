@@ -6,7 +6,7 @@ const ClosingSection = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/onboarding");
+    navigate("/auth");
   };
 
   return (

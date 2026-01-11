@@ -21,7 +21,7 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/onboarding");
+    navigate("/auth");
   };
 
   return (
