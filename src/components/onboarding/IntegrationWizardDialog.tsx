@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/config";
 
 export type IntegrationType = "slack" | "whatsapp" | "email" | "notion" | "google-sheets";
 
@@ -227,7 +228,7 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
     // Redirect to backend OAuth endpoint with returnTo parameter
     // This ensures we return to onboarding after OAuth completes
     const returnTo = window.location.pathname; // e.g., /onboarding
-    window.location.href = `http://localhost:5000/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   return (
