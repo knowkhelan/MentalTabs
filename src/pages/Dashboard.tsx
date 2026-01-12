@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -164,7 +165,7 @@ const Dashboard = () => {
     // Check connection status from backend
     const checkConnectionStatus = async () => {
       try {
-        const response = await fetch("http://localhost:5000/auth/status");
+        const response = await fetch(`${API_BASE_URL}/auth/status`);
         const data = await response.json();
         if (data.connected) {
           setInputSources((prev) =>
@@ -207,7 +208,7 @@ const Dashboard = () => {
     if (id === "gmail" && type === "input") {
       // Redirect to backend OAuth endpoint with returnTo parameter
       const returnTo = window.location.pathname; // /dashboard
-      window.location.href = `http://localhost:5000/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+      window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
       return;
     }
 
