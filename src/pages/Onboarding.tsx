@@ -19,11 +19,17 @@ const Onboarding = () => {
   // Handle OAuth callback
   useEffect(() => {
     const oauthStatus = searchParams.get("oauth");
+    const notionStatus = searchParams.get("notion");
     const oauthError = searchParams.get("error");
 
     if (oauthStatus === "success") {
       // OAuth successful - email source should be marked as connected
       // The InputSourceScreen component will handle updating its state
+      // Clean up URL
+      navigate("/onboarding", { replace: true });
+    } else if (notionStatus === "connected") {
+      // Notion OAuth successful - mark output destination as connected
+      setOutputDestination("notion");
       // Clean up URL
       navigate("/onboarding", { replace: true });
     } else if (oauthError) {

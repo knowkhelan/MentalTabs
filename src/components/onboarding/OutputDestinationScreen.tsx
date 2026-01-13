@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FileText, Table, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,9 +29,18 @@ const outputOptions = [
 const OutputDestinationScreen = ({
   onContinue,
 }: OutputDestinationScreenProps) => {
+  const [searchParams] = useSearchParams();
   const [connectedDestinations, setConnectedDestinations] = useState<DestinationType[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeDestination, setActiveDestination] = useState<IntegrationType | null>(null);
+
+  // Handle Notion OAuth callback
+  useEffect(() => {
+    const notionStatus = searchParams.get("notion");
+    if (notionStatus === "connected" && !connectedDestinations.includes("notion")) {
+      setConnectedDestinations((prev) => [...prev, "notion"]);
+    }
+  }, [searchParams]);
 
   const handleConnectClick = (id: DestinationType) => {
     if (connectedDestinations.includes(id)) return;

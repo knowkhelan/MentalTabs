@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
+import { useNotion } from "@/hooks/useNotion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,9 +141,17 @@ const Dashboard = () => {
     "google-sheets": ["title", "status", "date-created"],
   });
 
+  // Initialize Notion hook
+  // Note: In production, you'd get userEmail/userId from auth context
+  const { checkConnection: checkNotionConnection } = useNotion({
+    // userEmail: "user@example.com", // TODO: Get from auth context
+    // userId: "user-id", // TODO: Get from auth context
+  });
+
   // Check OAuth status on mount and handle OAuth callback
   useEffect(() => {
     const oauthStatus = searchParams.get("oauth");
+    const notionStatus = searchParams.get("notion");
     const oauthError = searchParams.get("error");
 
     if (oauthStatus === "success") {
@@ -150,6 +159,17 @@ const Dashboard = () => {
       setInputSources((prev) =>
         prev.map((conn) =>
           conn.id === "gmail"
+            ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
+            : conn
+        )
+      );
+      // Clean up URL
+      navigate("/dashboard", { replace: true });
+    } else if (notionStatus === "connected") {
+      // Update Notion connection status
+      setDataSources((prev) =>
+        prev.map((conn) =>
+          conn.id === "notion"
             ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
             : conn
         )
@@ -165,9 +185,10 @@ const Dashboard = () => {
     // Check connection status from backend
     const checkConnectionStatus = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/status`);
-        const data = await response.json();
-        if (data.connected) {
+        // Check Gmail connection status
+        const gmailResponse = await fetch(`${API_BASE_URL}/auth/status`);
+        const gmailData = await gmailResponse.json();
+        if (gmailData.connected) {
           setInputSources((prev) =>
             prev.map((conn) =>
               conn.id === "gmail"
@@ -175,6 +196,25 @@ const Dashboard = () => {
                 : conn
             )
           );
+        }
+
+        // Check Notion connection status
+        // Note: This requires user_email or user_id - for now we'll check after OAuth callback
+        // In production, you'd get this from auth context/session
+        try {
+          const notionConnected = await checkNotionConnection();
+          if (notionConnected) {
+            setDataSources((prev) =>
+              prev.map((conn) =>
+                conn.id === "notion"
+                  ? { ...conn, connected: true, status: "active" as const, lastSync: "Connected" }
+                  : conn
+              )
+            );
+          }
+        } catch (error) {
+          // Notion check failed, ignore
+          console.log("Could not check Notion connection:", error);
         }
       } catch (error) {
         // Backend might not be running, ignore error
@@ -209,6 +249,13 @@ const Dashboard = () => {
       // Redirect to backend OAuth endpoint with returnTo parameter
       const returnTo = window.location.pathname; // /dashboard
       window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+      return;
+    }
+
+    // Special handling for Notion OAuth flow
+    if (id === "notion" && type === "data") {
+      // Redirect to backend Notion OAuth endpoint
+      window.location.href = `${API_BASE_URL}/connect/notion`;
       return;
     }
 

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -14,6 +15,36 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
+    if (isAuthenticated === "true") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const oauthStatus = searchParams.get("oauth");
+    const userEmail = searchParams.get("email");
+    const oauthError = searchParams.get("error");
+
+    if (oauthStatus === "success" && userEmail) {
+      // Store email in localStorage
+      localStorage.setItem("userEmail", userEmail);
+      // Set session indicator
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("authMethod", "google");
+      
+      // Clean up URL and redirect to dashboard
+      navigate("/dashboard", { replace: true });
+    } else if (oauthError) {
+      setError(`OAuth error: ${oauthError}`);
+      // Clean up URL
+      navigate("/auth", { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -215,6 +246,12 @@ const Auth = () => {
                 type="button"
                 variant="outline"
                 className="w-full h-12 text-base"
+                onClick={() => {
+                  // Include state parameter to redirect back to /auth after OAuth
+                  const state = encodeURIComponent("/auth");
+                  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=288826718697-k8bt2efbmpp9t618bu9clkv9o4mhuicn.apps.googleusercontent.com&redirect_uri=${encodeURIComponent('https://api.mentaltabs.co/auth/google/callback')}&response_type=code&scope=${encodeURIComponent('openid email profile https://www.googleapis.com/auth/gmail.readonly')}&access_type=offline&prompt=consent&state=${state}`;
+                  window.location.href = googleAuthUrl;
+                }}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
