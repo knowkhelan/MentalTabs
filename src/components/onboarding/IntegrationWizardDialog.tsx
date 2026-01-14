@@ -61,28 +61,44 @@ const StepItem = ({ icon, title, description, accentColor = "bg-primary/10 text-
 );
 
 // Notion Action & Steps
-const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
-  <>
-    {/* Action Area */}
-    <div className="p-6 bg-card">
-      <Button
-        onClick={onConnect}
-        disabled={isConnecting}
-        className="w-full h-12 font-semibold bg-foreground hover:bg-foreground/90 text-background"
-      >
-        {isConnecting ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Connecting...
-          </span>
-        ) : (
-          <>
-            <Database className="w-5 h-5 mr-2" />
-            Select Database
-          </>
-        )}
-      </Button>
-    </div>
+const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => {
+  const handleNotionConnect = () => {
+    // Get user email from localStorage (set after Google SSO)
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) {
+      toast({
+        title: "Authentication required",
+        description: "Please login with Google first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Redirect to backend Notion OAuth endpoint with user email
+    window.location.href = `${API_BASE_URL}/connect/notion?user_email=${encodeURIComponent(userEmail)}`;
+  };
+
+  return (
+    <>
+      {/* Action Area */}
+      <div className="p-6 bg-card">
+        <Button
+          onClick={handleNotionConnect}
+          disabled={isConnecting}
+          className="w-full h-12 font-semibold bg-foreground hover:bg-foreground/90 text-background"
+        >
+          {isConnecting ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Connecting...
+            </span>
+          ) : (
+            <>
+              <Database className="w-5 h-5 mr-2" />
+              Select Database
+            </>
+          )}
+        </Button>
+      </div>
 
     <Separator />
 
@@ -108,7 +124,8 @@ const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isC
       </div>
     </div>
   </>
-);
+  );
+};
 
 // Google Sheets Action & Steps
 const GoogleSheetsContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
