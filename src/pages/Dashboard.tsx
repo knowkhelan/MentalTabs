@@ -254,8 +254,15 @@ const Dashboard = () => {
 
     // Special handling for Notion OAuth flow
     if (id === "notion" && type === "data") {
-      // Redirect to backend Notion OAuth endpoint
-      window.location.href = `${API_BASE_URL}/connect/notion`;
+      // Get user email from localStorage (set after Google SSO)
+      const userEmail = localStorage.getItem("userEmail");
+      if (!userEmail) {
+        console.error("User email not found in localStorage. Please login with Google first.");
+        // Optionally redirect to auth page or show error
+        return;
+      }
+      // Redirect to backend Notion OAuth endpoint with user email
+      window.location.href = `${API_BASE_URL}/connect/notion?user_email=${encodeURIComponent(userEmail)}`;
       return;
     }
 
