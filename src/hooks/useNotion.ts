@@ -19,7 +19,7 @@ interface UseNotionOptions {
 export function useNotion(options: UseNotionOptions = {}) {
   const { userEmail, userId } = options;
   const [isLoading, setIsLoading] = useState(false);
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<{ connected: boolean; configured: boolean } | null>(null);
 
   /**
    * Check if Notion is connected
@@ -27,13 +27,13 @@ export function useNotion(options: UseNotionOptions = {}) {
   const checkConnection = useCallback(async () => {
     setIsLoading(true);
     try {
-      const connected = await checkNotionConnection(userEmail, userId);
-      setIsConnected(connected);
-      return connected;
+      const status = await checkNotionConnection(userEmail, userId);
+      setConnectionStatus(status);
+      return status;
     } catch (error) {
       console.error("Error checking Notion connection:", error);
-      setIsConnected(false);
-      return false;
+      setConnectionStatus({ connected: false, configured: false });
+      return { connected: false, configured: false };
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +141,9 @@ export function useNotion(options: UseNotionOptions = {}) {
 
   return {
     isLoading,
-    isConnected,
+    isConnected: connectionStatus?.connected ?? null,
+    isConfigured: connectionStatus?.configured ?? null,
+    connectionStatus,
     checkConnection,
     syncData,
     fetchPages,

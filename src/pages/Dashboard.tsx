@@ -288,16 +288,17 @@ const Dashboard = () => {
       // Update Notion connection status - check if configured
       const checkConfig = async () => {
         try {
-          const status = await checkNotionConnection(userEmail || undefined);
+          const status = await checkNotionConnection();
+          const isConfigured = status?.configured ?? false;
           setDataSources((prev) =>
             prev.map((conn) =>
               conn.id === "notion"
                 ? { 
                     ...conn, 
                     connected: true, 
-                    configured: status.configured,
-                    status: status.configured ? ("active" as const) : ("needs_attention" as const),
-                    lastSync: status.configured ? "Just now" : "Setup required"
+                    configured: isConfigured,
+                    status: isConfigured ? ("active" as const) : ("needs_attention" as const),
+                    lastSync: isConfigured ? "Just now" : "Setup required"
                   }
                 : conn
             )
@@ -340,17 +341,18 @@ const Dashboard = () => {
 
         // Check Notion connection and configuration status
         try {
-          const notionStatus = await checkNotionConnection(userEmail || undefined);
-          if (notionStatus.connected) {
+          const notionStatus = await checkNotionConnection();
+          if (notionStatus?.connected) {
+            const isConfigured = notionStatus?.configured ?? false;
             setDataSources((prev) =>
               prev.map((conn) =>
                 conn.id === "notion"
                   ? { 
                       ...conn, 
                       connected: true, 
-                      configured: notionStatus.configured,
-                      status: notionStatus.configured ? ("active" as const) : ("needs_attention" as const),
-                      lastSync: notionStatus.configured ? "Configured" : "Setup required"
+                      configured: isConfigured,
+                      status: isConfigured ? ("active" as const) : ("needs_attention" as const),
+                      lastSync: isConfigured ? "Configured" : "Setup required"
                     }
                   : conn
               )
