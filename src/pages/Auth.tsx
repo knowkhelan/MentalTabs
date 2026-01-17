@@ -33,6 +33,17 @@ const Auth = () => {
     if (oauthStatus === "success" && userEmail) {
       // Store email in localStorage
       localStorage.setItem("userEmail", userEmail);
+      
+      // Store name and picture if available
+      const name = searchParams.get("name");
+      const picture = searchParams.get("picture");
+      if (name) {
+        localStorage.setItem("userName", name);
+      }
+      if (picture) {
+        localStorage.setItem("userPicture", picture);
+      }
+      
       // Set session indicator
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("authMethod", "google");
