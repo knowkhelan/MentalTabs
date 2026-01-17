@@ -29,31 +29,32 @@ export interface NotionApiResponse<T> {
 }
 
 /**
- * Check if Notion is connected for a user
+ * Check if Notion is connected and configured for a user
  */
 export async function checkNotionConnection(
   userEmail?: string,
   userId?: string
-): Promise<boolean> {
+): Promise<{ connected: boolean; configured: boolean }> {
   try {
-    // Note: Backend doesn't have a dedicated status endpoint for Notion
-    // We'll try to fetch databases as a way to check connection
     const params = new URLSearchParams();
     if (userEmail) params.append("user_email", userEmail);
     if (userId) params.append("user_id", userId);
 
     const response = await fetch(
-      `${API_BASE_URL}/get-notion-databases?${params.toString()}`
+      `${API_BASE_URL}/notion/status?${params.toString()}`
     );
 
     if (response.ok) {
-      const data: NotionApiResponse<any> = await response.json();
-      return data.status === "ok";
+      const data: NotionApiResponse<{ connected: boolean; configured: boolean }> = await response.json();
+      return {
+        connected: data.data?.connected || false,
+        configured: data.data?.configured || false,
+      };
     }
-    return false;
+    return { connected: false, configured: false };
   } catch (error) {
     console.error("Error checking Notion connection:", error);
-    return false;
+    return { connected: false, configured: false };
   }
 }
 

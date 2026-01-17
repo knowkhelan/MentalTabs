@@ -22,8 +22,12 @@ import {
   Edit,
   X,
   RefreshCw,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
+import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
 
@@ -32,15 +36,17 @@ interface Connection {
   name: string;
   icon: string;
   connected: boolean;
+  configured?: boolean; // For Notion: whether database is configured
   status: ConnectionStatus;
   lastSync: string | null;
+  comingSoon?: boolean; // Whether this service is coming soon
 }
 
-// Mock data
-const mockUser = {
-  email: "user@example.com",
-  initials: "U",
-};
+interface UserProfile {
+  email: string;
+  name?: string;
+  picture?: string;
+}
 
 const mockStats = {
   totalMessages: 1247,
@@ -57,30 +63,34 @@ const mockInputSources: Connection[] = [
     connected: false,
     status: "disconnected",
     lastSync: null,
+    comingSoon: false,
   },
   {
     id: "slack",
     name: "Slack",
     icon: "💬",
-    connected: true,
-    status: "active",
-    lastSync: "2 mins ago",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
+    comingSoon: true,
   },
   {
     id: "outlook",
     name: "Outlook",
     icon: "📧",
-    connected: true,
-    status: "active",
-    lastSync: "5 mins ago",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
+    comingSoon: true,
   },
   {
     id: "whatsapp",
     name: "WhatsApp",
     icon: "📱",
-    connected: true,
-    status: "needs_attention",
-    lastSync: "1 hour ago",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
+    comingSoon: true,
   },
 ];
 
@@ -92,6 +102,7 @@ const mockDataSources: Connection[] = [
     connected: true,
     status: "active",
     lastSync: "5 mins ago",
+    comingSoon: false,
   },
   {
     id: "google-sheets",
@@ -100,6 +111,7 @@ const mockDataSources: Connection[] = [
     connected: false,
     status: "disconnected",
     lastSync: null,
+    comingSoon: true,
   },
 ];
 
@@ -140,6 +152,12 @@ const Dashboard = () => {
     notion: ["title", "status", "date-created"],
     "google-sheets": ["title", "status", "date-created"],
   });
+  const [notionSetupOpen, setNotionSetupOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  
+  // Debug flag: Set to true to always show FTUX for testing
+  const FORCE_SHOW_NOTION_FTUX = false;
 
   // Initialize Notion hook
   // Note: In production, you'd get userEmail/userId from auth context
@@ -148,6 +166,66 @@ const Dashboard = () => {
     // userId: "user-id", // TODO: Get from auth context
   });
 
+  // Get user email from localStorage and fetch profile
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    const name = localStorage.getItem("userName");
+    const picture = localStorage.getItem("userPicture");
+    
+    if (email) {
+      setUserEmail(email);
+      
+      // Set profile from localStorage if available
+      if (name || picture) {
+        setUserProfile({
+          email,
+          name: name || undefined,
+          picture: picture || undefined,
+        });
+      }
+      
+      // Fetch user profile from backend
+      const fetchUserProfile = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/status?user_email=${encodeURIComponent(email)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.email_address) {
+              const profile: UserProfile = {
+                email: data.email_address,
+                name: data.name || undefined,
+                picture: data.picture || undefined,
+              };
+              setUserProfile(profile);
+              
+              // Store in localStorage
+              if (profile.name) localStorage.setItem("userName", profile.name);
+              if (profile.picture) localStorage.setItem("userPicture", profile.picture);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      };
+      
+      fetchUserProfile();
+    }
+    
+    // Debug: Force show FTUX if flag is enabled
+    if (FORCE_SHOW_NOTION_FTUX && email) {
+      setTimeout(() => {
+        setNotionSetupOpen(true);
+        setDataSources((prev) =>
+          prev.map((conn) =>
+            conn.id === "notion"
+              ? { ...conn, connected: true, status: "needs_attention" as const, lastSync: "Setup required" }
+              : conn
+          )
+        );
+      }, 500);
+    }
+  }, [FORCE_SHOW_NOTION_FTUX]);
+
   // Check OAuth status on mount and handle OAuth callback
   useEffect(() => {
     const oauthStatus = searchParams.get("oauth");
@@ -155,6 +233,31 @@ const Dashboard = () => {
     const oauthError = searchParams.get("error");
 
     if (oauthStatus === "success") {
+      // Get user info from URL params
+      const email = searchParams.get("email");
+      const name = searchParams.get("name");
+      const picture = searchParams.get("picture");
+      
+      if (email) {
+        setUserEmail(email);
+        localStorage.setItem("userEmail", email);
+        localStorage.setItem("isAuthenticated", "true");
+        
+        if (name) {
+          localStorage.setItem("userName", name);
+        }
+        if (picture) {
+          localStorage.setItem("userPicture", picture);
+        }
+        
+        // Update profile state
+        setUserProfile({
+          email,
+          name: name || undefined,
+          picture: picture || undefined,
+        });
+      }
+      
       // Update Gmail connection status
       setInputSources((prev) =>
         prev.map((conn) =>
@@ -165,15 +268,52 @@ const Dashboard = () => {
       );
       // Clean up URL
       navigate("/dashboard", { replace: true });
-    } else if (notionStatus === "connected") {
-      // Update Notion connection status
+    } else if (notionStatus === "setup_needed") {
+      console.log("Notion connected - setup needed!");
+      // Update Notion connection status to show as connected but needs configuration
       setDataSources((prev) =>
         prev.map((conn) =>
           conn.id === "notion"
-            ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
+            ? { ...conn, connected: true, configured: false, status: "needs_attention" as const, lastSync: "Setup required" }
             : conn
         )
       );
+      
+      // Show the setup dialog
+      setNotionSetupOpen(true);
+      
+      // Clean up URL
+      navigate("/dashboard", { replace: true });
+    } else if (notionStatus === "connected") {
+      // Update Notion connection status - check if configured
+      const checkConfig = async () => {
+        try {
+          const status = await checkNotionConnection(userEmail || undefined);
+          setDataSources((prev) =>
+            prev.map((conn) =>
+              conn.id === "notion"
+                ? { 
+                    ...conn, 
+                    connected: true, 
+                    configured: status.configured,
+                    status: status.configured ? ("active" as const) : ("needs_attention" as const),
+                    lastSync: status.configured ? "Just now" : "Setup required"
+                  }
+                : conn
+            )
+          );
+        } catch (error) {
+          // Default to configured if check fails
+          setDataSources((prev) =>
+            prev.map((conn) =>
+              conn.id === "notion"
+                ? { ...conn, connected: true, configured: true, status: "active" as const, lastSync: "Just now" }
+                : conn
+            )
+          );
+        }
+      };
+      checkConfig();
       // Clean up URL
       navigate("/dashboard", { replace: true });
     } else if (oauthError) {
@@ -198,16 +338,20 @@ const Dashboard = () => {
           );
         }
 
-        // Check Notion connection status
-        // Note: This requires user_email or user_id - for now we'll check after OAuth callback
-        // In production, you'd get this from auth context/session
+        // Check Notion connection and configuration status
         try {
-          const notionConnected = await checkNotionConnection();
-          if (notionConnected) {
+          const notionStatus = await checkNotionConnection(userEmail || undefined);
+          if (notionStatus.connected) {
             setDataSources((prev) =>
               prev.map((conn) =>
                 conn.id === "notion"
-                  ? { ...conn, connected: true, status: "active" as const, lastSync: "Connected" }
+                  ? { 
+                      ...conn, 
+                      connected: true, 
+                      configured: notionStatus.configured,
+                      status: notionStatus.configured ? ("active" as const) : ("needs_attention" as const),
+                      lastSync: notionStatus.configured ? "Configured" : "Setup required"
+                    }
                   : conn
               )
             );
@@ -226,6 +370,12 @@ const Dashboard = () => {
   }, [searchParams, navigate]);
 
   const handleOpenConfig = (id: string) => {
+    // Special handling for Notion - open FTUX modal instead
+    if (id === "notion") {
+      setNotionSetupOpen(true);
+      return;
+    }
+    
     setConfigDialogSource(id);
     setConfigDialogOpen(true);
   };
@@ -237,6 +387,17 @@ const Dashboard = () => {
         [configDialogSource]: columns,
       }));
     }
+  };
+
+  const handleNotionSetupComplete = () => {
+    // Update Notion connection status to active and configured
+    setDataSources((prev) =>
+      prev.map((conn) =>
+        conn.id === "notion"
+          ? { ...conn, connected: true, configured: true, status: "active" as const, lastSync: "Just now" }
+          : conn
+      )
+    );
   };
 
   const getSourceName = (id: string | null) => {
@@ -298,8 +459,43 @@ const Dashboard = () => {
     );
   };
 
-  const handleLogout = () => {
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      // Call backend logout endpoint
+      if (userEmail) {
+        await fetch(`${API_BASE_URL}/auth/logout?user_email=${encodeURIComponent(userEmail)}`, {
+          method: "POST",
+        });
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    } finally {
+      // Clear all localStorage data
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userPicture");
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("authMethod");
+      
+      // Reset state
+      setUserEmail(null);
+      setUserProfile(null);
+      
+      // Navigate to home
+      navigate("/");
+    }
+  };
+  
+  const getUserInitials = (profile: UserProfile | null): string => {
+    if (!profile) return "U";
+    if (profile.name) {
+      const names = profile.name.split(" ");
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+      }
+      return profile.name.substring(0, 2).toUpperCase();
+    }
+    return profile.email.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -317,15 +513,28 @@ const Dashboard = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    {mockUser.initials}
-                  </div>
+                  {userProfile?.picture ? (
+                    <img
+                      src={userProfile.picture}
+                      alt={userProfile.name || userProfile.email}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                      {getUserInitials(userProfile)}
+                    </div>
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground">
-                    {mockUser.email}
+                  {userProfile?.name && (
+                    <p className="text-sm font-medium text-foreground">
+                      {userProfile.name}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {userProfile?.email || userEmail || "User"}
                   </p>
                 </div>
                 <DropdownMenuSeparator />
@@ -364,7 +573,10 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {inputSources.map((connection) => (
-              <Card key={connection.id} className="border-border">
+              <Card 
+                key={connection.id} 
+                className={`border-border ${connection.comingSoon ? "opacity-60" : ""}`}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -381,20 +593,39 @@ const Dashboard = () => {
                       </div>
                     </div>
                     {/* Health badge */}
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        connection.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : connection.status === "needs_attention"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {getStatusLabel(connection.status)}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      {connection.comingSoon ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                          <Clock className="w-3 h-3" />
+                          Coming Soon
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            connection.status === "active"
+                              ? "bg-green-100 text-green-700"
+                              : connection.status === "needs_attention"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {getStatusLabel(connection.status)}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {connection.connected ? (
+                  {connection.comingSoon ? (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      disabled
+                      variant="outline"
+                    >
+                      <Clock className="w-3 h-3 mr-2" />
+                      Coming Soon
+                    </Button>
+                  ) : connection.connected ? (
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -451,7 +682,10 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {dataSources.map((connection) => (
-              <Card key={connection.id} className="border-border">
+              <Card 
+                key={connection.id} 
+                className={`border-border ${connection.comingSoon ? "opacity-60" : ""}`}
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -468,48 +702,87 @@ const Dashboard = () => {
                       </div>
                     </div>
                     {/* Health badge */}
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        connection.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : connection.status === "needs_attention"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {getStatusLabel(connection.status)}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      {connection.comingSoon ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                          <Clock className="w-3 h-3" />
+                          Coming Soon
+                        </span>
+                      ) : (
+                        <>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                              connection.status === "active"
+                                ? "bg-green-100 text-green-700"
+                                : connection.status === "needs_attention"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {getStatusLabel(connection.status)}
+                          </span>
+                          {/* Notion specific: Show "Connected" badge when configured */}
+                          {connection.id === "notion" && connection.connected && connection.configured && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Connected
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  {connection.connected ? (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleOpenConfig(connection.id)}
-                      >
-                        <Settings className="w-3 h-3 mr-1" />
-                        Configure
-                      </Button>
-                      {connection.status === "needs_attention" && (
+                  {connection.comingSoon ? (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      disabled
+                      variant="outline"
+                    >
+                      <Clock className="w-3 h-3 mr-2" />
+                      Coming Soon
+                    </Button>
+                  ) : connection.connected ? (
+                    <>
+                      {/* Notion: Show configuration hint if not configured */}
+                      {connection.id === "notion" && !connection.configured && (
+                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-sm text-yellow-800">
+                            <ArrowRight className="w-4 h-4 text-yellow-600 animate-pulse" />
+                            <span className="flex-1">Complete setup to start syncing</span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleReconnect(connection.id, "data")}
+                          className="flex-1"
+                          onClick={() => handleOpenConfig(connection.id)}
                         >
-                          <RefreshCw className="w-3 h-3" />
+                          <Settings className="w-3 h-3 mr-1" />
+                          {connection.id === "notion" && !connection.configured ? "Setup" : "Configure"}
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemove(connection.id, "data")}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
+                        {connection.status === "needs_attention" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReconnect(connection.id, "data")}
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRemove(connection.id, "data")}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </>
                   ) : (
                     <Button
                       size="sm"
@@ -532,6 +805,14 @@ const Dashboard = () => {
           destinationName={getSourceName(configDialogSource)}
           selectedColumns={configDialogSource ? columnConfigs[configDialogSource] || [] : []}
           onSave={handleSaveColumns}
+        />
+
+        {/* Notion Setup Dialog */}
+        <NotionSetupDialog
+          open={notionSetupOpen}
+          onOpenChange={setNotionSetupOpen}
+          userEmail={userEmail || undefined}
+          onComplete={handleNotionSetupComplete}
         />
 
         {/* Stats Section */}
