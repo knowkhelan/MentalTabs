@@ -54,8 +54,8 @@ const HeroSection = () => {
         </div>
 
         {/* Logo */}
-        <div className="mb-6 animate-fade-up animation-delay-50">
-          <img src={logo} alt="MentalTabs Logo" className="w-20 h-20 mx-auto" />
+        <div className="mb-8 animate-fade-up animation-delay-50">
+          <img src={logo} alt="MentalTabs Logo" className="w-32 h-32 md:w-40 md:h-40 mx-auto" />
         </div>
 
         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-[1.1] mb-6 animate-fade-up animation-delay-100">
