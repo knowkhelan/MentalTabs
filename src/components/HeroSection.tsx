@@ -58,9 +58,14 @@ const HeroSection = () => {
           <span className="text-gradient">in your head?</span>
         </h1>
         
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
-          Mental Tabs captures any thought and turns it into clear actions, 
-          reflections, or questions — <span className="text-foreground font-medium">automatically.</span>
+        <p className="text-lg md:text-xl text-muted-foreground mb-4 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
+          Capture thoughts without switching tabs, apps, or contexts.
+          <br />
+          <span className="text-foreground font-medium">No new app to open. No inbox to manage. Just send it.</span>
+        </p>
+
+        <p className="text-base text-muted-foreground/80 mb-10 animate-fade-up animation-delay-250 max-w-xl mx-auto">
+          Stay in flow. Mental Tabs handles the rest.
         </p>
 
         <div className="animate-fade-up animation-delay-300">
@@ -68,19 +73,15 @@ const HeroSection = () => {
             onClick={handleGetStarted}
             className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold animate-pulse-glow mb-4"
           >
-            Try Mental Tab
+            Try Mental Tabs
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <MessageCircle className="w-4 h-4" />
-            <span>Works with WhatsApp, Email and Slack</span>
+            <span>Works seamlessly with WhatsApp, Slack, and Email</span>
           </div>
         </div>
-
-        <p className="text-sm text-muted-foreground animate-fade-up animation-delay-400 font-medium">
-          No organizing. No thinking. <span className="text-foreground">Just dump it.</span>
-        </p>
       </div>
     </section>
   );
