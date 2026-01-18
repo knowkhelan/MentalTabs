@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { API_BASE_URL } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -227,7 +228,7 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
     // Redirect to backend OAuth endpoint with returnTo parameter
     // This ensures we return to onboarding after OAuth completes
     const returnTo = window.location.pathname; // e.g., /onboarding
-    window.location.href = `http://localhost:5000/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   return (
