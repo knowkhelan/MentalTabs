@@ -27,23 +27,30 @@ const Privacy = () => {
           <section className="space-y-4">
             <h2 className="font-display text-xl font-semibold text-foreground">What We Collect</h2>
             <p>
-              When you use MentalTabs, we process the messages you send us (via WhatsApp, Slack, or Email) 
-              to organize your thoughts and send them to your connected Notion database.
-            </p>
-            <p>
-              We also collect basic account information (like your email address) to provide the service.
+              We collect only basic account information (like your email address) needed to provide the service 
+              and connect your integrations.
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="font-display text-xl font-semibold text-foreground">How We Use Your Data</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground">How We Handle Your Messages</h2>
             <p>
-              Your data is used only to provide MentalTabs. We process your messages to categorize and 
-              organize them, then send them to your Notion. That's it.
+              When you send a message through WhatsApp, Slack, or Email, we process it in real-time to 
+              categorize and organize it, then immediately send it to your connected Notion database.
             </p>
             <p>
-              We don't sell your personal data. We don't use your thoughts for advertising. 
-              We don't share your information with third parties for their marketing purposes.
+              <strong className="text-foreground">We do not store your messages.</strong> Your thoughts pass through 
+              our system and go directly to your Notion — we don't keep copies. Your data lives in your Notion, 
+              not on our servers.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="font-display text-xl font-semibold text-foreground">What We Don't Do</h2>
+            <p>
+              We don't sell your personal data. We don't use your thoughts for advertising, training AI models, 
+              or any purpose other than delivering them to your Notion. We don't share your information with 
+              third parties for their marketing purposes.
             </p>
           </section>
 
@@ -62,8 +69,8 @@ const Privacy = () => {
           <section className="space-y-4">
             <h2 className="font-display text-xl font-semibold text-foreground">Data Security</h2>
             <p>
-              We store your data securely and take reasonable measures to protect it. 
-              Your messages are processed and stored using industry-standard security practices.
+              Since we don't store your messages, there's nothing to leak. Your account credentials and 
+              integration tokens are stored securely using industry-standard encryption.
             </p>
           </section>
 
