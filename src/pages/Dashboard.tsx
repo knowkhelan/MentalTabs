@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,10 +35,19 @@ interface Connection {
   lastSync: string | null;
 }
 
-// Mock data
-const mockUser = {
-  email: "user@example.com",
-  initials: "U",
+// Helper function to get initials from email or name
+const getInitials = (email?: string, name?: string): string => {
+  if (name) {
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+  if (email) {
+    return email[0].toUpperCase();
+  }
+  return "U";
 };
 
 const mockStats = {
@@ -138,6 +148,15 @@ const Dashboard = () => {
     notion: ["title", "status", "date-created"],
     "google-sheets": ["title", "status", "date-created"],
   });
+  const [userInfo, setUserInfo] = useState<{
+    email: string;
+    name?: string;
+    picture?: string;
+    initials: string;
+  }>({
+    email: "",
+    initials: "U",
+  });
 
   // Check OAuth status on mount and handle OAuth callback
   useEffect(() => {
@@ -145,6 +164,29 @@ const Dashboard = () => {
     const oauthError = searchParams.get("error");
 
     if (oauthStatus === "success") {
+      // Store user info from OAuth redirect
+      const emailFromParams = searchParams.get("email");
+      const nameFromParams = searchParams.get("name");
+      const pictureFromParams = searchParams.get("picture");
+      
+      if (emailFromParams) {
+        localStorage.setItem("userEmail", emailFromParams);
+        if (nameFromParams) {
+          localStorage.setItem("userName", nameFromParams);
+        }
+        if (pictureFromParams) {
+          localStorage.setItem("userPicture", pictureFromParams);
+        }
+        
+        // Update user info state
+        setUserInfo({
+          email: emailFromParams,
+          name: nameFromParams || undefined,
+          picture: pictureFromParams || undefined,
+          initials: getInitials(emailFromParams, nameFromParams || undefined),
+        });
+      }
+      
       // Update Gmail connection status
       setInputSources((prev) =>
         prev.map((conn) =>
@@ -161,10 +203,32 @@ const Dashboard = () => {
       navigate("/dashboard", { replace: true });
     }
 
-    // Check connection status from backend
+    // Load user info from localStorage on mount
+    const loadUserInfo = () => {
+      const storedEmail = localStorage.getItem("userEmail");
+      const storedName = localStorage.getItem("userName");
+      const storedPicture = localStorage.getItem("userPicture");
+      
+      if (storedEmail) {
+        setUserInfo({
+          email: storedEmail,
+          name: storedName || undefined,
+          picture: storedPicture || undefined,
+          initials: getInitials(storedEmail, storedName || undefined),
+        });
+      }
+    };
+
+    // Check connection status from backend and update user info
     const checkConnectionStatus = async () => {
       try {
-        const response = await fetch("http://localhost:5000/auth/status");
+        // Get user email from localStorage to query auth status
+        const storedEmail = localStorage.getItem("userEmail");
+        const url = storedEmail 
+          ? `${API_BASE_URL}/auth/status?user_email=${encodeURIComponent(storedEmail)}`
+          : `${API_BASE_URL}/auth/status`;
+        
+        const response = await fetch(url);
         const data = await response.json();
         if (data.connected) {
           setInputSources((prev) =>
@@ -175,12 +239,26 @@ const Dashboard = () => {
             )
           );
         }
+        
+        // Update user info from backend response
+        if (data.email_address) {
+          if (!localStorage.getItem("userEmail")) {
+            localStorage.setItem("userEmail", data.email_address);
+          }
+          setUserInfo({
+            email: data.email_address,
+            name: data.name || undefined,
+            picture: data.picture || undefined,
+            initials: getInitials(data.email_address, data.name || undefined),
+          });
+        }
       } catch (error) {
         // Backend might not be running, ignore error
         console.log("Could not check connection status:", error);
       }
     };
 
+    loadUserInfo();
     checkConnectionStatus();
   }, [searchParams, navigate]);
 
@@ -207,7 +285,7 @@ const Dashboard = () => {
     if (id === "gmail" && type === "input") {
       // Redirect to backend OAuth endpoint with returnTo parameter
       const returnTo = window.location.pathname; // /dashboard
-      window.location.href = `http://localhost:5000/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+      window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
       return;
     }
 
@@ -244,6 +322,10 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
+    // Clear user info from localStorage
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userPicture");
     navigate("/");
   };
 
@@ -262,15 +344,28 @@ const Dashboard = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    {mockUser.initials}
-                  </div>
+                  {userInfo.picture ? (
+                    <img
+                      src={userInfo.picture}
+                      alt={userInfo.email}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                      {userInfo.initials}
+                    </div>
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground">
-                    {mockUser.email}
+                  {userInfo.name && (
+                    <p className="text-sm font-medium text-foreground">
+                      {userInfo.name}
+                    </p>
+                  )}
+                  <p className={`text-sm ${userInfo.name ? "text-muted-foreground" : "font-medium text-foreground"}`}>
+                    {userInfo.email || "Not logged in"}
                   </p>
                 </div>
                 <DropdownMenuSeparator />
@@ -295,6 +390,28 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Quick Upload Section */}
+        <section className="mb-10">
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">
+                    Upload Image or Paste Text
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Extract text from images using OCR and sync to Notion
+                  </p>
+                </div>
+                <Button onClick={() => navigate("/upload")} size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upload Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Input Sources Section */}
         <section className="mb-10">
           <div className="flex items-center justify-between mb-6">
