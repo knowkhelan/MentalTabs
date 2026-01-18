@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.jpeg";
 
 const Footer = () => {
   return (
     <footer className="py-12 px-6 border-t border-border">
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="MentalTabs Logo" className="w-8 h-8 rounded-lg" />
             <span className="font-display font-bold text-lg text-foreground">Mental Tabs</span>
             <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full font-medium">Beta</span>
           </div>
