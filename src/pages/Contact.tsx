@@ -56,11 +56,11 @@ const Contact = () => {
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold text-foreground">Email Us</h2>
               <a 
-                href="mailto:support@mentaltabs.com" 
+                href="mailto:admin@mentaltabs.co" 
                 className="inline-flex items-center gap-3 text-primary hover:underline text-lg"
               >
                 <Mail className="w-5 h-5" />
-                support@mentaltabs.com
+                admin@mentaltabs.co
               </a>
             </div>
 

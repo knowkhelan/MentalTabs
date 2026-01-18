@@ -84,8 +84,8 @@ const Terms = () => {
             <h2 className="font-display text-xl font-semibold text-foreground">Questions?</h2>
             <p>
               If anything here is unclear, reach out at{" "}
-              <a href="mailto:support@mentaltabs.com" className="text-primary hover:underline">
-                support@mentaltabs.com
+              <a href="mailto:admin@mentaltabs.co" className="text-primary hover:underline">
+                admin@mentaltabs.co
               </a>
               .
             </p>
