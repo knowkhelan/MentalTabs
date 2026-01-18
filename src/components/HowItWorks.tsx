@@ -4,22 +4,22 @@ const steps = [
   {
     icon: MessageSquare,
     number: "01",
-    title: "Dump any thought",
-    description: "Task, idea, worry, reminder, curiosity — anything. Just send it.",
+    title: "Dump it. Anywhere.",
+    description: "Message yourself from WhatsApp, Slack, or Email. No app to open.",
     accent: "from-primary/20 to-primary/5"
   },
   {
     icon: Sparkles,
     number: "02",
-    title: "AI organizes it instantly",
-    description: "Without you labeling or categorizing. It just happens.",
+    title: "AI sorts it instantly.",
+    description: "No tags. No folders. No thinking. It just happens.",
     accent: "from-secondary/20 to-secondary/5"
   },
   {
     icon: Brain,
     number: "03",
-    title: "Your mind gets clarity",
-    description: "Everything in the right place. Mental load lifted.",
+    title: "Clarity shows up.",
+    description: "Actions, thoughts, and curiosities — already separated.",
     accent: "from-emerald-500/20 to-emerald-500/5"
   }
 ];

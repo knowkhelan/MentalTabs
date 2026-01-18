@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import NoContextSwitching from "@/components/NoContextSwitching";
 import TransformationVisual from "@/components/TransformationVisual";
 import HowItWorks from "@/components/HowItWorks";
 import WhoItsFor from "@/components/WhoItsFor";
@@ -9,6 +10,7 @@ const Index = () => {
   return (
     <main className="min-h-screen bg-background">
       <HeroSection />
+      <NoContextSwitching />
       <TransformationVisual />
       <HowItWorks />
       <WhoItsFor />
