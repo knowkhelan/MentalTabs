@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, MessageCircle } from "lucide-react";
-import logo from "@/assets/logo.jpeg";
+import logo from "@/assets/logo.png";
 
 const floatingThoughts = [
   { text: "call investor back", delay: "0s", position: "top-24 left-[3%]" },
@@ -47,15 +47,15 @@ const HeroSection = () => {
       </div>
 
       <div className="max-w-3xl mx-auto text-center relative z-10">
-        {/* Logo */}
-        <div className="mb-6 animate-fade-up">
-          <img src={logo} alt="MentalTabs Logo" className="w-24 h-24 mx-auto rounded-2xl shadow-lg" />
-        </div>
-
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-border mb-8 animate-fade-up">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-border mb-6 animate-fade-up">
           <Sparkles className="w-4 h-4 text-primary" />
           <span className="text-sm font-medium text-foreground">AI-powered mental clarity</span>
+        </div>
+
+        {/* Logo */}
+        <div className="mb-6 animate-fade-up animation-delay-50">
+          <img src={logo} alt="MentalTabs Logo" className="w-20 h-20 mx-auto" />
         </div>
 
         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground leading-[1.1] mb-6 animate-fade-up animation-delay-100">
