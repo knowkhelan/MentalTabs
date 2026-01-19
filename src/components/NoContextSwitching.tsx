@@ -19,7 +19,7 @@ const scenarios = [
     icon: Mail,
     context: "You're in Email",
     trigger: "thought appears",
-    action: "forward it",
+    action: "label it",
     color: "text-primary"
   }
 ];
@@ -30,10 +30,10 @@ const NoContextSwitching = () => {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            No context switching. <span className="text-gradient">Ever.</span>
+            Stay in your flow. <span className="text-gradient">Capture in seconds.</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Your brain jumps fast. Tools shouldn't slow it down.
+            No switching tabs. No opening new apps. Just send it and move on.
           </p>
         </div>
 

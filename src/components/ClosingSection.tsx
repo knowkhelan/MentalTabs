@@ -22,20 +22,20 @@ const ClosingSection = () => {
         </div>
 
         <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
-          A clearer mind,
+          Stop losing ideas.
           <br />
-          <span className="text-gradient">without trying.</span>
+          <span className="text-gradient">Start executing on them.</span>
         </h2>
-        
+
         <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-          Keep doing your work. Mental Tabs closes the loops.
+          Free to start. Takes less than 2 minutes to set up.
         </p>
 
-        <Button 
+        <Button
           onClick={handleGetStarted}
           className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold"
         >
-          Start capturing thoughts
+          Get Started Free
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
       </div>

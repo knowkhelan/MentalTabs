@@ -23,6 +23,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
+import logo from "@/assets/logo.png";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
 
@@ -336,9 +337,12 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <h1 className="font-display text-xl font-bold text-foreground">
-              Mental<span className="text-primary">Tabs</span>
-            </h1>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Mental Tabs" className="w-12 h-12 object-contain" />
+              <h1 className="font-display text-xl font-bold text-foreground">
+                Mental<span className="text-primary">Tabs</span>
+              </h1>
+            </div>
 
             {/* Profile Dropdown */}
             <DropdownMenu>
