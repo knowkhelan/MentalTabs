@@ -173,8 +173,7 @@ Input (Gmail/Slack/WhatsApp/Sheets)
 ## 9. Pricing (Post-MVP)
 
 **Free:** 100 captures/month, 2 integrations  
-**Pro ($12/mo):** Unlimited captures, all integrations, advanced AI  
-**Team ($30/mo):** 5 users, shared database, team insights
+**Pro ($0.99/mo):** Unlimited captures, all integrations, advanced AI  
 
 ---
 
