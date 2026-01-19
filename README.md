@@ -82,8 +82,6 @@ Stop breaking your flow. Apply a Gmail label, use a Slack command, or text Whats
 | Due Date | Parse natural language | "tomorrow" → 2026-01-20 |
 | Notes | Full content + backlink | Email from john@vc.com + link |
 | Source | Log origin | Gmail |
-| Energy Level | Estimate cognitive load | Medium |
-| Time Estimate | Predict duration | 15-30 min |
 | Tags | Extract keywords | #investor, #follow-up |
 
 **AI Stack:** OpenAI GPT-4 or Anthropic Claude Sonnet
