@@ -195,3 +195,34 @@ Input (Gmail/Slack/WhatsApp/Sheets)
 | Privacy concerns | "We never store messages" messaging |
 
 ---
+## 12. Competitive Analysis
+
+### Existing Solutions
+**Zapier/Make.com**
+* **What they do:** Workflow automation platforms that can connect Gmail/Slack → Notion
+* **Limitation:** Requires manual setup of complex Zaps/scenarios, no AI categorization, high friction for non-technical users
+* **Our advantage:** Zero-setup integrations, AI auto-categorization, built specifically for thought capture (not general automation)
+
+**Notion's Built-in Integrations**
+* **What they do:** Native Gmail integration, Slack notifications to Notion
+* **Limitation:** Basic forwarding only, no AI processing, requires opening Notion to set up, limited to email
+* **Our advantage:** Multi-channel in one place, AI organization, works from within the tool (Gmail label vs. manual forward)
+
+**Save to Notion Browser Extension**
+* **What they do:** Capture web content to Notion via browser extension
+* **Limitation:** Browser-only, manual categorization, doesn't work for emails/messages, requires context switch to open extension
+* **Our advantage:** Native integration within communication tools, AI categorization, works across all platforms (not just web)
+
+**Reclaim.ai / Motion**
+* **What they do:** AI-powered task management and calendar scheduling
+* **Limitation:** Still requires manual task entry or importing from other tools, focused on scheduling/time-blocking rather than capture
+* **Our advantage:** Capture happens where work happens (Gmail/Slack/WhatsApp), no need to open separate app, laser-focused on eliminating context-switching for capture
+
+### Our Defensible Position
+
+**Speed of Capture:** 2 seconds (apply label) vs. 2 minutes (open Zapier, configure, test)  
+**Zero Learning Curve:** Use tools you already know (labels, slash commands) vs. learning automation platforms  
+**AI-First:** Built-in intelligence for categorization vs. manual setup of rules  
+**Founder-Specific:** Designed for high-velocity capture during flow state, not general productivity
+
+**Why We Win:** Competitors solve "how do I automate workflows" or "how do I manage tasks." We solve "how do I capture without breaking flow." Different problem, different solution.
