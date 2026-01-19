@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -10,11 +11,15 @@ const Auth = () => {
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
-    // Simulate auth - just navigate to onboarding
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/onboarding");
-    }, 1000);
+    // Check if user email exists in localStorage (returning user)
+    const storedEmail = localStorage.getItem("userEmail");
+    // Redirect to backend OAuth endpoint with returnTo parameter
+    // After successful OAuth, user will be redirected to onboarding
+    const returnTo = "/onboarding";
+    const url = storedEmail
+      ? `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}&user_email=${encodeURIComponent(storedEmail)}`
+      : `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = url;
   };
 
   return (

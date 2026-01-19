@@ -61,28 +61,42 @@ const StepItem = ({ icon, title, description, accentColor = "bg-primary/10 text-
 );
 
 // Notion Action & Steps
-const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
-  <>
-    {/* Action Area */}
-    <div className="p-6 bg-card">
-      <Button
-        onClick={onConnect}
-        disabled={isConnecting}
-        className="w-full h-12 font-semibold bg-foreground hover:bg-foreground/90 text-background"
-      >
-        {isConnecting ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Connecting...
-          </span>
-        ) : (
-          <>
-            <Database className="w-5 h-5 mr-2" />
-            Select Database
-          </>
-        )}
-      </Button>
-    </div>
+const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => {
+  const handleNotionConnect = () => {
+    // Get user email from localStorage
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) {
+      console.error("User email not found. Please login first.");
+      return;
+    }
+    
+    // Redirect to backend Notion OAuth endpoint with returnTo parameter
+    const returnTo = window.location.pathname; // /onboarding
+    window.location.href = `${API_BASE_URL}/connect/notion?user_email=${encodeURIComponent(userEmail)}&returnTo=${encodeURIComponent(returnTo)}`;
+  };
+
+  return (
+    <>
+      {/* Action Area */}
+      <div className="p-6 bg-card">
+        <Button
+          onClick={handleNotionConnect}
+          disabled={isConnecting}
+          className="w-full h-12 font-semibold bg-foreground hover:bg-foreground/90 text-background"
+        >
+          {isConnecting ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Connecting...
+            </span>
+          ) : (
+            <>
+              <Database className="w-5 h-5 mr-2" />
+              Connect Notion
+            </>
+          )}
+        </Button>
+      </div>
 
     <Separator />
 
@@ -108,7 +122,8 @@ const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isC
       </div>
     </div>
   </>
-);
+  );
+};
 
 // Google Sheets Action & Steps
 const GoogleSheetsContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => (
@@ -117,21 +132,15 @@ const GoogleSheetsContent = ({ onConnect, isConnecting }: { onConnect: () => voi
     <div className="p-6 bg-card">
       <Button
         onClick={onConnect}
-        disabled={isConnecting}
-        className="w-full h-12 font-semibold bg-[#0F9D58] hover:bg-[#0d8a4d] text-white"
+        disabled={true}
+        className="w-full h-12 font-semibold bg-[#0F9D58]/50 hover:bg-[#0F9D58]/50 text-white cursor-not-allowed"
       >
-        {isConnecting ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Connecting...
-          </span>
-        ) : (
-          <>
-            <Table className="w-5 h-5 mr-2" />
-            Connect Google Account
-          </>
-        )}
+        <Table className="w-5 h-5 mr-2" />
+        Coming soon
       </Button>
+      <p className="text-xs text-muted-foreground text-center mt-2">
+        This integration will be available soon
+      </p>
     </div>
 
     <Separator />
@@ -225,10 +234,16 @@ const SlackContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
 // Email Action & Steps (Gmail OAuth)
 const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) => {
   const handleGmailConnect = () => {
+    // Check if user email exists in localStorage (returning user)
+    const storedEmail = localStorage.getItem("userEmail");
     // Redirect to backend OAuth endpoint with returnTo parameter
     // This ensures we return to onboarding after OAuth completes
     const returnTo = window.location.pathname; // e.g., /onboarding
-    window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+    const url = storedEmail
+      ? `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}&user_email=${encodeURIComponent(storedEmail)}`
+      : `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = url;
+    // Note: onConnect will be called after OAuth callback redirects back
   };
 
   return (

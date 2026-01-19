@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { MessageSquare, MessageCircle, Mail, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/config";
 import IntegrationWizardDialog, { type IntegrationType } from "./IntegrationWizardDialog";
 
 type SourceType = "slack" | "whatsapp" | "email";
@@ -17,18 +18,21 @@ const inputOptions = [
     label: "Slack",
     icon: MessageSquare,
     description: "Quick messages to yourself",
+    comingSoon: false,
   },
   {
     id: "whatsapp" as SourceType,
     label: "WhatsApp",
     icon: MessageCircle,
     description: "Voice notes & quick texts",
+    comingSoon: true,
   },
   {
     id: "email" as SourceType,
     label: "Email",
     icon: Mail,
     description: "Send thoughts anytime",
+    comingSoon: false,
   },
 ];
 
@@ -39,21 +43,67 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeIntegration, setActiveIntegration] = useState<IntegrationType | null>(null);
 
-  // Handle OAuth callback - mark email as connected if OAuth was successful
+  // Check backend connection status on mount and handle Gmail OAuth callback
   useEffect(() => {
     const oauthStatus = searchParams.get("oauth");
-    if (oauthStatus === "success" && !connectedSources.includes("email")) {
-      setConnectedSources((prev) => [...prev, "email"]);
-      setSelectedSources((prev) => 
-        prev.includes("email") ? prev : [...prev, "email"]
-      );
+    
+    // Handle Gmail OAuth callback first
+    if (oauthStatus === "success") {
+      setConnectedSources((prev) => {
+        if (!prev.includes("email")) {
+          return [...prev, "email"];
+        }
+        return prev;
+      });
+      setSelectedSources((prev) => {
+        if (!prev.includes("email")) {
+          return [...prev, "email"];
+        }
+        return prev;
+      });
       // Close wizard if it's open
       setWizardOpen(false);
+      return; // Don't check backend if we just got a callback
     }
-  }, [searchParams, connectedSources]);
+
+    // Check backend connection status
+    const checkConnectionStatus = async () => {
+      try {
+        const storedEmail = localStorage.getItem("userEmail");
+        if (!storedEmail) return;
+
+        const response = await fetch(
+          `${API_BASE_URL}/auth/status?user_email=${encodeURIComponent(storedEmail)}`
+        );
+        const data = await response.json();
+        
+        // If Gmail is connected, mark email as connected
+        if (data.connected) {
+          setConnectedSources((prev) => {
+            if (!prev.includes("email")) {
+              return [...prev, "email"];
+            }
+            return prev;
+          });
+          setSelectedSources((prev) => {
+            if (!prev.includes("email")) {
+              return [...prev, "email"];
+            }
+            return prev;
+          });
+        }
+      } catch (error) {
+        console.log("Could not check connection status:", error);
+      }
+    };
+
+    checkConnectionStatus();
+  }, [searchParams]);
 
   const handleConnectClick = (id: SourceType) => {
     if (connectedSources.includes(id)) return;
+    const option = inputOptions.find(opt => opt.id === id);
+    if (option?.comingSoon) return; // Don't open wizard for coming soon features
     setActiveIntegration(id);
     setWizardOpen(true);
   };
@@ -100,16 +150,19 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
           {inputOptions.map((option) => {
             const connected = isConnected(option.id);
             const selected = isSelected(option.id);
+            const isComingSoon = option.comingSoon;
 
             return (
               <div
                 key={option.id}
-                onClick={() => handleConnectClick(option.id)}
+                onClick={() => !isComingSoon && handleConnectClick(option.id)}
                 className={cn(
-                  "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 cursor-pointer text-left relative",
+                  "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 text-left relative",
                   connected
-                    ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border hover:border-primary/30 hover:bg-accent"
+                    ? "border-primary bg-primary/5 shadow-md cursor-pointer"
+                    : isComingSoon
+                    ? "border-border opacity-60 cursor-not-allowed"
+                    : "border-border hover:border-primary/30 hover:bg-accent cursor-pointer"
                 )}
               >
                 {/* Checkbox indicator - click to disconnect */}
@@ -151,6 +204,10 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
                     <div className="flex items-center gap-2 text-green-600 animate-fade-in">
                       <Check className="w-4 h-4" />
                       <span className="text-sm font-medium">Connected</span>
+                    </div>
+                  ) : isComingSoon ? (
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <span>Coming soon</span>
                     </div>
                   ) : (
                     <button

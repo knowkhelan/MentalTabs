@@ -1,6 +1,5 @@
-import { Check, Lightbulb, Zap, HelpCircle, LogIn } from "lucide-react";
+import { Check, Lightbulb, Zap, HelpCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 interface SuccessScreenProps {
   onComplete: () => void;
@@ -13,11 +12,6 @@ const categories = [
 ];
 
 const SuccessScreen = ({ onComplete }: SuccessScreenProps) => {
-  const navigate = useNavigate();
-
-  const handleLoginSignup = () => {
-    navigate("/auth");
-  };
 
   return (
     <div className="text-center">
@@ -29,10 +23,10 @@ const SuccessScreen = ({ onComplete }: SuccessScreenProps) => {
       </div>
 
       <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
-        Your Notion dashboard is ready
+        You're all set!
       </h1>
       <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-        We've created a Mental Tab workspace in your Notion where all your thoughts will be organized automatically.
+        Your sources and destinations are configured. Your thoughts will now be automatically organized and synced.
       </p>
 
       {/* Category preview */}
@@ -56,11 +50,11 @@ const SuccessScreen = ({ onComplete }: SuccessScreenProps) => {
       </div>
 
       <Button
-        onClick={handleLoginSignup}
+        onClick={onComplete}
         className="w-full h-14 text-base font-semibold"
       >
-        Login / Sign Up
-        <LogIn className="ml-2 w-4 h-4" />
+        Go to Dashboard
+        <ArrowRight className="ml-2 w-4 h-4" />
       </Button>
     </div>
   );
