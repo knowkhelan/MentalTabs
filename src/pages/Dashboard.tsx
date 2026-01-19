@@ -34,6 +34,8 @@ interface Connection {
   connected: boolean;
   status: ConnectionStatus;
   lastSync: string | null;
+  comingSoon?: boolean;
+  configured?: boolean; // For Notion: true if database_id is set
 }
 
 // Helper function to get initials from email or name
@@ -71,25 +73,18 @@ const mockInputSources: Connection[] = [
     id: "slack",
     name: "Slack",
     icon: "💬",
-    connected: true,
-    status: "active",
-    lastSync: "2 mins ago",
-  },
-  {
-    id: "outlook",
-    name: "Outlook",
-    icon: "📧",
-    connected: true,
-    status: "active",
-    lastSync: "5 mins ago",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
   },
   {
     id: "whatsapp",
     name: "WhatsApp",
     icon: "📱",
-    connected: true,
-    status: "needs_attention",
-    lastSync: "1 hour ago",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
+    comingSoon: true,
   },
 ];
 
@@ -98,9 +93,9 @@ const mockDataSources: Connection[] = [
     id: "notion",
     name: "Notion",
     icon: "📝",
-    connected: true,
-    status: "active",
-    lastSync: "5 mins ago",
+    connected: false,
+    status: "disconnected",
+    lastSync: null,
   },
   {
     id: "google-sheets",
@@ -109,6 +104,7 @@ const mockDataSources: Connection[] = [
     connected: false,
     status: "disconnected",
     lastSync: null,
+    comingSoon: true,
   },
 ];
 
@@ -159,9 +155,29 @@ const Dashboard = () => {
     initials: "U",
   });
 
+  // Check if onboarding is complete, redirect if not
+  useEffect(() => {
+    const onboardingComplete = localStorage.getItem("onboardingComplete");
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    
+    // If user is logged in but hasn't completed onboarding, redirect to onboarding
+    // This ensures first-time users always go through onboarding
+    if (isLoggedIn === "true" && onboardingComplete !== "true") {
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    
+    // If user is not logged in, redirect to auth
+    if (isLoggedIn !== "true") {
+      navigate("/auth", { replace: true });
+      return;
+    }
+  }, [navigate]);
+
   // Check OAuth status on mount and handle OAuth callback
   useEffect(() => {
     const oauthStatus = searchParams.get("oauth");
+    const notionStatus = searchParams.get("notion");
     const oauthError = searchParams.get("error");
 
     if (oauthStatus === "success") {
@@ -172,6 +188,7 @@ const Dashboard = () => {
       
       if (emailFromParams) {
         localStorage.setItem("userEmail", emailFromParams);
+        localStorage.setItem("isLoggedIn", "true"); // Set logged in flag
         if (nameFromParams) {
           localStorage.setItem("userName", nameFromParams);
         }
@@ -198,6 +215,40 @@ const Dashboard = () => {
       );
       // Clean up URL
       navigate("/dashboard", { replace: true });
+    } else if (notionStatus === "connected" || notionStatus === "setup_needed") {
+      // Notion OAuth successful - check configuration status
+      const checkNotionStatus = async () => {
+        try {
+          const storedEmail = localStorage.getItem("userEmail");
+          if (storedEmail) {
+            const notionResponse = await fetch(
+              `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
+            );
+            const notionData = await notionResponse.json();
+            
+            if (notionData.connected) {
+              setDataSources((prev) =>
+                prev.map((conn) =>
+                  conn.id === "notion"
+                    ? { 
+                        ...conn, 
+                        connected: true, 
+                        configured: notionData.configured || false,
+                        status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
+                        lastSync: notionData.configured ? "Configured" : "Needs setup"
+                      }
+                    : conn
+                )
+              );
+            }
+          }
+        } catch (error) {
+          console.log("Could not check Notion status:", error);
+        }
+      };
+      checkNotionStatus();
+      // Clean up URL
+      navigate("/dashboard", { replace: true });
     } else if (oauthError) {
       console.error("OAuth error:", oauthError);
       // Clean up URL
@@ -211,6 +262,8 @@ const Dashboard = () => {
       const storedPicture = localStorage.getItem("userPicture");
       
       if (storedEmail) {
+        // Ensure logged in flag is set if user email exists
+        localStorage.setItem("isLoggedIn", "true");
         setUserInfo({
           email: storedEmail,
           name: storedName || undefined,
@@ -253,6 +306,30 @@ const Dashboard = () => {
             initials: getInitials(data.email_address, data.name || undefined),
           });
         }
+
+        // Check Notion status
+        if (storedEmail) {
+          const notionResponse = await fetch(
+            `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
+          );
+          const notionData = await notionResponse.json();
+          
+          if (notionData.connected) {
+            setDataSources((prev) =>
+              prev.map((conn) =>
+                conn.id === "notion"
+                  ? { 
+                      ...conn, 
+                      connected: true, 
+                      configured: notionData.configured || false,
+                      status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
+                      lastSync: notionData.configured ? "Configured" : "Needs setup"
+                    }
+                  : conn
+              )
+            );
+          }
+        }
       } catch (error) {
         // Backend might not be running, ignore error
         console.log("Could not check connection status:", error);
@@ -286,7 +363,11 @@ const Dashboard = () => {
     if (id === "gmail" && type === "input") {
       // Redirect to backend OAuth endpoint with returnTo parameter
       const returnTo = window.location.pathname; // /dashboard
-      window.location.href = `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+      const storedEmail = localStorage.getItem("userEmail");
+      const url = storedEmail
+        ? `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}&user_email=${encodeURIComponent(storedEmail)}`
+        : `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
+      window.location.href = url;
       return;
     }
 
@@ -488,6 +569,12 @@ const Dashboard = () => {
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
+                  ) : connection.comingSoon ? (
+                    <div className="flex items-center justify-center py-2">
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Coming soon
+                      </span>
+                    </div>
                   ) : (
                     <Button
                       size="sm"
@@ -576,13 +663,19 @@ const Dashboard = () => {
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
+                  ) : connection.comingSoon ? (
+                    <div className="flex items-center justify-center py-2">
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Coming soon
+                      </span>
+                    </div>
                   ) : (
                     <Button
                       size="sm"
                       className="w-full"
                       onClick={() => handleConnect(connection.id, "data")}
                     >
-                      Connect
+                      {connection.id === "notion" ? "Connect" : "Connect"}
                     </Button>
                   )}
                 </CardContent>

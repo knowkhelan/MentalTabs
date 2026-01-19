@@ -16,19 +16,45 @@ const Onboarding = () => {
   const [inputSources, setInputSources] = useState<InputSource[]>([]);
   const [outputDestination, setOutputDestination] = useState<OutputDestination>(null);
 
-  // Handle OAuth callback
+  // Handle OAuth callbacks (Gmail and Notion)
   useEffect(() => {
     const oauthStatus = searchParams.get("oauth");
+    const notionStatus = searchParams.get("notion");
     const oauthError = searchParams.get("error");
 
     if (oauthStatus === "success") {
-      // OAuth successful - email source should be marked as connected
+      // Gmail OAuth successful - email source should be marked as connected
       // The InputSourceScreen component will handle updating its state
-      // Clean up URL
+      // Store user info if available
+      const emailFromParams = searchParams.get("email");
+      const nameFromParams = searchParams.get("name");
+      const pictureFromParams = searchParams.get("picture");
+      
+      if (emailFromParams) {
+        localStorage.setItem("userEmail", emailFromParams);
+        localStorage.setItem("isLoggedIn", "true");
+        // Don't set onboardingComplete here - let user go through onboarding
+        if (nameFromParams) {
+          localStorage.setItem("userName", nameFromParams);
+        }
+        if (pictureFromParams) {
+          localStorage.setItem("userPicture", pictureFromParams);
+        }
+      }
+      
+      // Clean up URL but stay on onboarding
       navigate("/onboarding", { replace: true });
+    } else if (notionStatus === "connected" || notionStatus === "setup_needed") {
+      // Notion OAuth successful - OutputDestinationScreen will handle updating its state
+      // Navigate to step 2 if not already there, but don't clean up URL yet
+      // OutputDestinationScreen will clean it up after processing
+      if (step !== 2) {
+        setStep(2); // Go to step 2 (OutputDestinationScreen) if not already there
+      }
+      // Don't navigate/clean URL here - let OutputDestinationScreen handle it
     } else if (oauthError) {
       console.error("OAuth error:", oauthError);
-      // Clean up URL
+      // Clean up URL but stay on onboarding
       navigate("/onboarding", { replace: true });
     }
   }, [searchParams, navigate]);
@@ -48,7 +74,9 @@ const Onboarding = () => {
   };
 
   const handleComplete = () => {
-    navigate("/");
+    // Mark onboarding as complete
+    localStorage.setItem("onboardingComplete", "true");
+    navigate("/dashboard");
   };
 
   return (

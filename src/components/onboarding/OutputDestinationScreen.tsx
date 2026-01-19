@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { FileText, Table, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/config";
 import IntegrationWizardDialog, { type IntegrationType } from "./IntegrationWizardDialog";
 
 interface OutputDestinationScreenProps {
@@ -16,24 +18,79 @@ const outputOptions = [
     label: "Notion",
     icon: FileText,
     description: "Sync with your existing workspace",
+    comingSoon: false,
   },
   {
     id: "google-sheets" as DestinationType,
     label: "Google Sheets",
     icon: Table,
     description: "Organize thoughts in spreadsheets",
+    comingSoon: true,
   },
 ];
 
 const OutputDestinationScreen = ({
   onContinue,
 }: OutputDestinationScreenProps) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [connectedDestinations, setConnectedDestinations] = useState<DestinationType[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeDestination, setActiveDestination] = useState<IntegrationType | null>(null);
 
+  // Check backend connection status on mount and handle Notion OAuth callback
+  useEffect(() => {
+    const notionStatus = searchParams.get("notion");
+    
+    // Handle Notion OAuth callback first
+    if (notionStatus === "connected" || notionStatus === "setup_needed") {
+      setConnectedDestinations((prev) => {
+        if (!prev.includes("notion")) {
+          return [...prev, "notion"];
+        }
+        return prev;
+      });
+      // Close wizard if it's open
+      setWizardOpen(false);
+      
+      // Clean up URL after processing
+      navigate("/onboarding", { replace: true });
+      
+      return; // Don't check backend if we just got a callback
+    }
+
+    // Check backend connection status
+    const checkConnectionStatus = async () => {
+      try {
+        const storedEmail = localStorage.getItem("userEmail");
+        if (!storedEmail) return;
+
+        const response = await fetch(
+          `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
+        );
+        const data = await response.json();
+        
+        // If Notion is connected, mark it as connected
+        if (data.connected) {
+          setConnectedDestinations((prev) => {
+            if (!prev.includes("notion")) {
+              return [...prev, "notion"];
+            }
+            return prev;
+          });
+        }
+      } catch (error) {
+        console.log("Could not check Notion connection status:", error);
+      }
+    };
+
+    checkConnectionStatus();
+  }, [searchParams]);
+
   const handleConnectClick = (id: DestinationType) => {
     if (connectedDestinations.includes(id)) return;
+    const option = outputOptions.find(opt => opt.id === id);
+    if (option?.comingSoon) return; // Don't open wizard for coming soon features
     setActiveDestination(id);
     setWizardOpen(true);
   };
@@ -73,16 +130,19 @@ const OutputDestinationScreen = ({
         <div className="space-y-3 mb-8">
           {outputOptions.map((option) => {
             const connected = isConnected(option.id);
+            const isComingSoon = option.comingSoon;
 
             return (
               <div
                 key={option.id}
-                onClick={() => handleConnectClick(option.id)}
+                onClick={() => !isComingSoon && handleConnectClick(option.id)}
                 className={cn(
-                  "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 cursor-pointer text-left relative",
+                  "w-full p-5 rounded-2xl border-2 bg-card transition-all duration-300 text-left relative",
                   connected
-                    ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border hover:border-primary/30 hover:bg-accent"
+                    ? "border-primary bg-primary/5 shadow-md cursor-pointer"
+                    : isComingSoon
+                    ? "border-border opacity-60 cursor-not-allowed"
+                    : "border-border hover:border-primary/30 hover:bg-accent cursor-pointer"
                 )}
               >
                 {/* Checkbox indicator - click to disconnect */}
@@ -124,6 +184,10 @@ const OutputDestinationScreen = ({
                     <div className="flex items-center gap-2 text-green-600 animate-fade-in">
                       <Check className="w-4 h-4" />
                       <span className="text-sm font-medium">Connected</span>
+                    </div>
+                  ) : isComingSoon ? (
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <span>Coming soon</span>
                     </div>
                   ) : (
                     <button
