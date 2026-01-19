@@ -23,6 +23,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
+import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
 import logo from "@/assets/logo.png";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
@@ -141,6 +142,8 @@ const Dashboard = () => {
   const [dataSources, setDataSources] = useState(mockDataSources);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [configDialogSource, setConfigDialogSource] = useState<string | null>(null);
+  const [notionSetupOpen, setNotionSetupOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [columnConfigs, setColumnConfigs] = useState<Record<string, string[]>>({
     notion: ["title", "status", "date-created"],
     "google-sheets": ["title", "status", "date-created"],
@@ -221,6 +224,7 @@ const Dashboard = () => {
         try {
           const storedEmail = localStorage.getItem("userEmail");
           if (storedEmail) {
+            setUserEmail(storedEmail);
             const notionResponse = await fetch(
               `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
             );
@@ -240,6 +244,11 @@ const Dashboard = () => {
                     : conn
                 )
               );
+              
+              // If setup is needed, open FTUX modal
+              if (notionStatus === "setup_needed" || !notionData.configured) {
+                setNotionSetupOpen(true);
+              }
             }
           }
         } catch (error) {
@@ -264,6 +273,7 @@ const Dashboard = () => {
       if (storedEmail) {
         // Ensure logged in flag is set if user email exists
         localStorage.setItem("isLoggedIn", "true");
+        setUserEmail(storedEmail);
         setUserInfo({
           email: storedEmail,
           name: storedName || undefined,
@@ -341,6 +351,13 @@ const Dashboard = () => {
   }, [searchParams, navigate]);
 
   const handleOpenConfig = (id: string) => {
+    // Special handling for Notion - open FTUX modal instead
+    if (id === "notion") {
+      setNotionSetupOpen(true);
+      return;
+    }
+    
+    // Other integrations use the old config dialog
     setConfigDialogSource(id);
     setConfigDialogOpen(true);
   };
@@ -356,6 +373,37 @@ const Dashboard = () => {
 
   const getSourceName = (id: string | null) => {
     return dataSources.find((s) => s.id === id)?.name || "";
+  };
+
+  const handleNotionSetupComplete = async () => {
+    // Refresh Notion connection status after setup
+    try {
+      const storedEmail = localStorage.getItem("userEmail");
+      if (storedEmail) {
+        const notionResponse = await fetch(
+          `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
+        );
+        const notionData = await notionResponse.json();
+        
+        if (notionData.connected) {
+          setDataSources((prev) =>
+            prev.map((conn) =>
+              conn.id === "notion"
+                ? { 
+                    ...conn, 
+                    connected: true, 
+                    configured: notionData.configured || false,
+                    status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
+                    lastSync: notionData.configured ? "Configured" : "Needs setup"
+                  }
+                : conn
+            )
+          );
+        }
+      }
+    } catch (error) {
+      console.log("Could not refresh Notion status:", error);
+    }
   };
 
   const handleConnect = (id: string, type: "input" | "data") => {
@@ -691,6 +739,14 @@ const Dashboard = () => {
           destinationName={getSourceName(configDialogSource)}
           selectedColumns={configDialogSource ? columnConfigs[configDialogSource] || [] : []}
           onSave={handleSaveColumns}
+        />
+
+        {/* Notion Setup Dialog (FTUX) */}
+        <NotionSetupDialog
+          open={notionSetupOpen}
+          onOpenChange={setNotionSetupOpen}
+          userEmail={userEmail}
+          onComplete={handleNotionSetupComplete}
         />
 
         {/* Stats Section */}
