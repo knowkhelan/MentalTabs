@@ -288,9 +288,9 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
             accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
           <StepItem
-            icon={<Check className="w-4 h-4" />}
-            title="Automatic Sync"
-            description="Your emails will be automatically synced and organized in Mental Tabs."
+            icon={<Hash className="w-4 h-4" />}
+            title="Apply Label"
+            description={<>Apply the label <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">mentaltabs</span> to any email you want synced to Notion.</>}
             accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
         </div>
