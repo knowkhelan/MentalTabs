@@ -58,28 +58,29 @@ const HeroSection = () => {
           <span className="text-gradient">in your head?</span>
         </h1>
         
-        <p className="text-lg md:text-xl text-muted-foreground mb-4 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
           Capture thoughts without switching tabs, apps, or contexts.
           <br />
           <span className="text-foreground font-medium">No new app to open. No inbox to manage. Just send it.</span>
         </p>
 
-        <p className="text-base text-muted-foreground/80 mb-10 animate-fade-up animation-delay-250 max-w-xl mx-auto">
-          Stay in flow. Mental Tabs handles the rest.
-        </p>
-
         <div className="animate-fade-up animation-delay-300">
-          <Button 
+          <Button
             onClick={handleGetStarted}
             className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold animate-pulse-glow mb-4"
           >
-            Try Mental Tabs
+            Get Started Free
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
-          
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <MessageCircle className="w-4 h-4" />
-            <span>Works seamlessly with WhatsApp, Slack, and Email</span>
+
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
+              <span>Works with WhatsApp, Slack, and Gmail</span>
+            </div>
+            <p className="text-xs text-muted-foreground/70">
+              🔒 Privacy-first: We never store your messages, only secure tokens
+            </p>
           </div>
         </div>
       </div>

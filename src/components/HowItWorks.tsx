@@ -4,22 +4,22 @@ const steps = [
   {
     icon: MessageSquare,
     number: "01",
-    title: "Dump it. Anywhere.",
-    description: "Message yourself from WhatsApp, Slack, or Email. No app to open.",
+    title: "Capture anywhere",
+    description: "Text WhatsApp, forward an email, or use Slack. Stay in your flow.",
     accent: "from-primary/20 to-primary/5"
   },
   {
     icon: Sparkles,
     number: "02",
-    title: "AI sorts it instantly.",
-    description: "No tags. No folders. No thinking. It just happens.",
+    title: "AI organizes everything",
+    description: "Auto-categorized as tasks, ideas, or questions. Priority detected. Due dates parsed.",
     accent: "from-secondary/20 to-secondary/5"
   },
   {
     icon: Brain,
     number: "03",
-    title: "Clarity shows up.",
-    description: "Actions, thoughts, and curiosities — already separated.",
+    title: "Syncs to Notion instantly",
+    description: "Everything appears in your workspace—structured, searchable, and ready to act on.",
     accent: "from-emerald-500/20 to-emerald-500/5"
   }
 ];

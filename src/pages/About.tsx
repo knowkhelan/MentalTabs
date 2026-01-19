@@ -15,44 +15,42 @@ const About = () => {
         </Link>
 
         <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-8">
-          About MentalTabs
+          About Mental Tabs
         </h1>
 
         <div className="space-y-8 text-muted-foreground leading-relaxed">
           <p className="text-lg text-foreground/80">
-            MentalTabs is a simple way to capture and organize your thoughts — without adding another app to your life.
+            Mental Tabs turns the tools you already use into a capture system for your thoughts.
           </p>
 
           <section className="space-y-4">
             <h2 className="font-display text-xl font-semibold text-foreground">The Problem</h2>
             <p>
-              We live with constant mental overload. Ideas pop up in the shower, tasks surface during dinner, 
-              and important thoughts get lost in the noise of daily life. We already use messaging apps all day — 
-              WhatsApp, Slack, Email — but our thoughts stay scattered across conversations, notes apps, and memory.
+              Ideas come at random times—during meetings, in the shower, while cooking. Most get lost because
+              switching to a notes app breaks your flow. You're already in WhatsApp, Slack, or email all day.
+              Why add another tool?
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="font-display text-xl font-semibold text-foreground">What MentalTabs Does</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground">How It Works</h2>
             <p>
-              MentalTabs lets you send thoughts through the tools you already use. Text a quick idea to WhatsApp, 
-              forward an email, or message a Slack bot. Your thoughts are automatically organized and sent to 
-              your Notion database — categorized as thoughts, actions, or curiosities.
+              Text yourself on WhatsApp. Forward an email. Message a Slack bot. Mental Tabs captures it,
+              uses AI to categorize it (task, idea, question), and syncs it to your Notion workspace—automatically.
             </p>
             <p>
-              No new app to open. No habit to build. Just capture and forget — we handle the rest.
+              No new app to learn. No inbox to check. Zero context-switching.
             </p>
           </section>
 
           <section className="space-y-4">
-            <h2 className="font-display text-xl font-semibold text-foreground">Our Philosophy</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground">Built for Founders</h2>
             <p>
-              We believe in reducing cognitive load, not adding to it. MentalTabs is built for people who think 
-              a lot — founders, creators, operators, and anyone whose mind runs faster than their ability to 
-              write things down.
+              If your mind runs faster than your ability to organize it, this is for you. Mental Tabs reduces
+              cognitive load without adding another tool to your stack.
             </p>
-            <p>
-              Simplicity is the goal. Clarity is the outcome.
+            <p className="text-sm text-muted-foreground/70">
+              🔒 Privacy-first: We never store your messages. Only secure OAuth tokens.
             </p>
           </section>
         </div>
