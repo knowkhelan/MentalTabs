@@ -5,7 +5,7 @@ const steps = [
     icon: MessageSquare,
     number: "01",
     title: "Capture anywhere",
-    description: "Text WhatsApp, forward an email, or use Slack. Stay in your flow.",
+    description: "Text WhatsApp, label an email, or use Slack. Stay in your flow.",
     accent: "from-primary/20 to-primary/5"
   },
   {
