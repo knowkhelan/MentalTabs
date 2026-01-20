@@ -62,9 +62,6 @@ const NoContextSwitching = () => {
           ))}
         </div>
 
-        <p className="text-center text-muted-foreground text-lg max-w-2xl mx-auto">
-          Mental Tabs organizes everything automatically — <span className="text-foreground font-medium">while you stay focused.</span>
-        </p>
       </div>
     </section>
   );

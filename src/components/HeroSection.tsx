@@ -61,7 +61,6 @@ const HeroSection = () => {
         <p className="text-lg md:text-xl text-muted-foreground mb-10 animate-fade-up animation-delay-200 max-w-2xl mx-auto leading-relaxed">
           Capture thoughts without switching tabs, apps, or contexts.
           <br />
-          <span className="text-foreground font-medium">No new app to open. No inbox to manage. Just send it.</span>
         </p>
 
         <div className="animate-fade-up animation-delay-300">
@@ -69,7 +68,7 @@ const HeroSection = () => {
             onClick={handleGetStarted}
             className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 text-base font-semibold animate-pulse-glow mb-4"
           >
-            Get Started Free
+            Try Mental Tabs for Free
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
 
