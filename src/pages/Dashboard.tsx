@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
+import SlackConnectDialog from "@/components/dashboard/SlackConnectDialog";
 import logo from "@/assets/logo.png";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
@@ -36,7 +37,9 @@ interface Connection {
   status: ConnectionStatus;
   lastSync: string | null;
   comingSoon?: boolean;
-  configured?: boolean; // For Notion: true if database_id is set
+  configured?: boolean; // For Notion: true if database_id is set, for Slack: true if app is installed
+  connection_url?: string | null; // For Slack: URL to install/connect the app
+  slack_email_address?: string | null; // For Slack: email address from status response
 }
 
 // Helper function to get initials from email or name
@@ -143,6 +146,9 @@ const Dashboard = () => {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [configDialogSource, setConfigDialogSource] = useState<string | null>(null);
   const [notionSetupOpen, setNotionSetupOpen] = useState(false);
+  const [slackConnectOpen, setSlackConnectOpen] = useState(false);
+  const [slackConnectionUrl, setSlackConnectionUrl] = useState<string | null>(null);
+  const [slackEmailAddress, setSlackEmailAddress] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [columnConfigs, setColumnConfigs] = useState<Record<string, string[]>>({
     notion: ["title", "status", "date-created"],
@@ -319,10 +325,13 @@ const Dashboard = () => {
 
         // Check Notion status
         if (storedEmail) {
-          const notionResponse = await fetch(
-            `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
-          );
+          const [notionResponse, slackResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`),
+            fetch(`${API_BASE_URL}/slack/status?user_email=${encodeURIComponent(storedEmail)}`)
+          ]);
+
           const notionData = await notionResponse.json();
+          const slackData = await slackResponse.json();
           
           if (notionData.connected) {
             setDataSources((prev) =>
@@ -339,6 +348,33 @@ const Dashboard = () => {
               )
             );
           }
+
+          // Update Slack connection status
+          if (slackData.status === "ok") {
+            setInputSources((prev) =>
+              prev.map((conn) =>
+                conn.id === "slack"
+                  ? {
+                      ...conn,
+                      connected: slackData.connected || false,
+                      configured: slackData.configured || false,
+                      connection_url: slackData.connection_url || null,
+                      slack_email_address: slackData.slack_email_address || null,
+                      status: slackData.configured
+                        ? ("active" as const)
+                        : slackData.connected
+                        ? ("needs_attention" as const)
+                        : ("disconnected" as const),
+                      lastSync: slackData.configured
+                        ? "Configured"
+                        : slackData.connected
+                        ? "Needs setup"
+                        : null,
+                    }
+                  : conn
+              )
+            );
+          }
         }
       } catch (error) {
         // Backend might not be running, ignore error
@@ -350,11 +386,22 @@ const Dashboard = () => {
     checkConnectionStatus();
   }, [searchParams, navigate]);
 
-  const handleOpenConfig = (id: string) => {
+  const handleOpenConfig = (id: string, type: "input" | "data") => {
     // Special handling for Notion - open FTUX modal instead
     if (id === "notion") {
       setNotionSetupOpen(true);
       return;
+    }
+
+    // Special handling for Slack - open SlackConnectDialog
+    if (id === "slack" && type === "input") {
+      const slackConnection = inputSources.find((conn) => conn.id === "slack");
+      if (slackConnection?.connected && !slackConnection?.configured) {
+        setSlackConnectionUrl(slackConnection.connection_url);
+        setSlackEmailAddress(slackConnection.slack_email_address);
+        setSlackConnectOpen(true);
+        return;
+      }
     }
     
     // Other integrations use the old config dialog
@@ -419,6 +466,19 @@ const Dashboard = () => {
       return;
     }
 
+    // Special handling for Slack - open dialog
+    if (id === "slack" && type === "input") {
+      const slackConnection = inputSources.find((conn) => conn.id === "slack");
+      if (slackConnection?.connection_url) {
+        setSlackConnectionUrl(slackConnection.connection_url);
+      }
+      if (slackConnection?.slack_email_address) {
+        setSlackEmailAddress(slackConnection.slack_email_address);
+      }
+      setSlackConnectOpen(true);
+      return;
+    }
+
     const setter = type === "input" ? setInputSources : setDataSources;
     setter((prev) =>
       prev.map((conn) =>
@@ -427,6 +487,51 @@ const Dashboard = () => {
           : conn
       )
     );
+  };
+
+  const handleSlackConnect = (email: string) => {
+    // Connection is handled by the API response in SlackConnectDialog
+    // Refresh Slack status after connection
+    const refreshSlackStatus = async () => {
+      try {
+        const storedEmail = localStorage.getItem("userEmail");
+        if (storedEmail) {
+          const slackResponse = await fetch(
+            `${API_BASE_URL}/slack/status?user_email=${encodeURIComponent(storedEmail)}`
+          );
+          const slackData = await slackResponse.json();
+          
+          if (slackData.status === "ok") {
+            setInputSources((prev) =>
+              prev.map((conn) =>
+                conn.id === "slack"
+                  ? {
+                      ...conn,
+                      connected: slackData.connected || false,
+                      configured: slackData.configured || false,
+                      connection_url: slackData.connection_url || null,
+                      slack_email_address: slackData.slack_email_address || null,
+                      status: slackData.configured
+                        ? ("active" as const)
+                        : slackData.connected
+                        ? ("needs_attention" as const)
+                        : ("disconnected" as const),
+                      lastSync: slackData.configured
+                        ? "Configured"
+                        : slackData.connected
+                        ? "Needs setup"
+                        : null,
+                    }
+                  : conn
+              )
+            );
+          }
+        }
+      } catch (error) {
+        console.log("Could not refresh Slack status:", error);
+      }
+    };
+    refreshSlackStatus();
   };
 
   const handleRemove = (id: string, type: "input" | "data") => {
@@ -595,6 +700,8 @@ const Dashboard = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
+                        disabled={connection.id === "slack" && connection.configured}
+                        onClick={() => connection.id === "slack" && !connection.configured ? handleOpenConfig(connection.id, "input") : undefined}
                       >
                         <Settings className="w-3 h-3 mr-1" />
                         Configure
@@ -688,7 +795,7 @@ const Dashboard = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => handleOpenConfig(connection.id)}
+                        onClick={() => handleOpenConfig(connection.id, "data")}
                       >
                         <Settings className="w-3 h-3 mr-1" />
                         Configure
@@ -747,6 +854,22 @@ const Dashboard = () => {
           onOpenChange={setNotionSetupOpen}
           userEmail={userEmail}
           onComplete={handleNotionSetupComplete}
+        />
+
+        {/* Slack Connect Dialog */}
+        <SlackConnectDialog
+          open={slackConnectOpen}
+          onOpenChange={(open) => {
+            setSlackConnectOpen(open);
+            if (!open) {
+              setSlackConnectionUrl(null);
+              setSlackEmailAddress(null);
+            }
+          }}
+          userEmail={userEmail}
+          connectionUrl={slackConnectionUrl}
+          slackEmailAddress={slackEmailAddress}
+          onConnect={handleSlackConnect}
         />
 
         {/* Stats Section */}
