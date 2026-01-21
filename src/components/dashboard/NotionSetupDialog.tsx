@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { API_BASE_URL } from "@/lib/config";
+import { apiGet, apiPost } from "@/lib/api";
 import { Database, Loader2, CheckCircle2, Info, ArrowRight, ArrowLeft, FileText } from "lucide-react";
 
 interface NotionPage {
@@ -133,22 +134,13 @@ const NotionSetupDialog = ({
   }, [open]);
 
   const checkExistingDatabase = async () => {
-    if (!userEmail) return;
-
     setCheckingStatus(true);
     setError(null);
     setStep("check-existing");
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(userEmail)}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to check Notion status");
-      }
-
-      const data = await response.json();
+      const data = await apiGet("/notion/status");
+      
       if (data.status === "ok" && data.configured && data.database_id) {
         setHasExistingDatabase(true);
         setStep("existing-database");
@@ -169,22 +161,12 @@ const NotionSetupDialog = ({
   };
 
   const fetchNotionPages = async () => {
-    if (!userEmail) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/get-notion-pages?user_email=${encodeURIComponent(userEmail)}`
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch Notion pages");
-      }
-
-      const data = await response.json();
+      const data = await apiGet("/get-notion-pages");
+      
       if (data.status === "ok" && data.data?.results) {
         setPages(data.data.results);
       } else {
@@ -219,7 +201,7 @@ const NotionSetupDialog = ({
   };
 
   const handleCreateDatabase = async () => {
-    if (!selectedPageId || !userEmail) {
+    if (!selectedPageId) {
       setError("Please select a page");
       return;
     }
@@ -228,28 +210,13 @@ const NotionSetupDialog = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/create-notion-database?user_email=${encodeURIComponent(userEmail)}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            page_id: selectedPageId,
-            title: databaseTitle,
-            description: "Database for MentalTabs to store your thoughts, tasks, and ideas",
-            columns: selectedColumns,
-          }),
-        }
-      );
+      const data = await apiPost("/create-notion-database", {
+        page_id: selectedPageId,
+        title: databaseTitle,
+        description: "Database for MentalTabs to store your thoughts, tasks, and ideas",
+        columns: selectedColumns,
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create database");
-      }
-
-      const data = await response.json();
       if (data.status === "ok") {
         setStep("success");
         setTimeout(() => {

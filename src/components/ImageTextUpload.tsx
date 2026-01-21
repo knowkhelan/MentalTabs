@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/config";
+import { apiPost } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface ImageTextUploadProps {
@@ -79,14 +79,6 @@ const ImageTextUpload = ({ userEmail, userId, onSuccess }: ImageTextUploadProps)
 
     try {
       const formData = new FormData();
-      const queryParams = new URLSearchParams();
-
-      if (userEmail) {
-        queryParams.append("user_email", userEmail);
-      }
-      if (userId) {
-        queryParams.append("user_id", userId);
-      }
 
       if (mode === "upload" && uploadedImage && uploadedFile) {
         formData.append("image", uploadedFile);
@@ -102,18 +94,7 @@ const ImageTextUpload = ({ userEmail, userId, onSuccess }: ImageTextUploadProps)
         return;
       }
 
-      const url = `${API_BASE_URL}/ocr/extract?${queryParams.toString()}`;
-      const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Failed to process image/text");
-      }
-
-      const result = await response.json();
+      const result = await apiPost("/ocr/extract", formData);
 
       toast({
         title: "Success!",

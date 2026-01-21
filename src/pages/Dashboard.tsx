@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
+import { setToken, apiGet, apiPost, removeToken } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,64 +161,94 @@ const Dashboard = () => {
 
   // Check if onboarding is complete, redirect if not
   useEffect(() => {
-    const onboardingComplete = localStorage.getItem("onboardingComplete");
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    
-    // If user is logged in but hasn't completed onboarding, redirect to onboarding
-    // This ensures first-time users always go through onboarding
-    if (isLoggedIn === "true" && onboardingComplete !== "true") {
-      navigate("/onboarding", { replace: true });
-      return;
-    }
-    
-    // If user is not logged in, redirect to auth
-    if (isLoggedIn !== "true") {
-      navigate("/auth", { replace: true });
-      return;
-    }
+    const checkOnboardingStatus = async () => {
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      
+      // If user is not logged in, redirect to auth
+      if (isLoggedIn !== "true") {
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      // Check backend for onboarding status
+      try {
+        const authStatus = await apiGet("/auth/status");
+        // If user is logged in but hasn't completed onboarding, redirect to onboarding
+        if (!authStatus.onboarding_complete) {
+          navigate("/onboarding", { replace: true });
+          return;
+        }
+      } catch (error) {
+        // If API call fails (e.g., no token), redirect to auth
+        console.log("Could not check onboarding status:", error);
+        navigate("/auth", { replace: true });
+      }
+    };
+
+    checkOnboardingStatus();
   }, [navigate]);
 
   // Check OAuth status on mount and handle OAuth callback
   useEffect(() => {
-    const oauthStatus = searchParams.get("oauth");
-    const notionStatus = searchParams.get("notion");
-    const oauthError = searchParams.get("error");
+    const handleOAuthCallback = async () => {
+      const oauthStatus = searchParams.get("oauth");
+      const notionStatus = searchParams.get("notion");
+      const oauthError = searchParams.get("error");
 
-    if (oauthStatus === "success") {
-      // Store user info from OAuth redirect
-      const emailFromParams = searchParams.get("email");
-      const nameFromParams = searchParams.get("name");
-      const pictureFromParams = searchParams.get("picture");
-      
-      if (emailFromParams) {
-        localStorage.setItem("userEmail", emailFromParams);
-        localStorage.setItem("isLoggedIn", "true"); // Set logged in flag
-        if (nameFromParams) {
-          localStorage.setItem("userName", nameFromParams);
-        }
-        if (pictureFromParams) {
-          localStorage.setItem("userPicture", pictureFromParams);
+      if (oauthStatus === "success") {
+        // Store user info from OAuth redirect
+        const emailFromParams = searchParams.get("email");
+        const nameFromParams = searchParams.get("name");
+        const pictureFromParams = searchParams.get("picture");
+        const tokenFromParams = searchParams.get("token");
+        
+        // Store JWT token if provided
+        if (tokenFromParams) {
+          setToken(tokenFromParams);
         }
         
-        // Update user info state
-        setUserInfo({
-          email: emailFromParams,
-          name: nameFromParams || undefined,
-          picture: pictureFromParams || undefined,
-          initials: getInitials(emailFromParams, nameFromParams || undefined),
-        });
-      }
-      
-      // Update Gmail connection status
-      setInputSources((prev) =>
-        prev.map((conn) =>
-          conn.id === "gmail"
-            ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
-            : conn
-        )
-      );
-      // Clean up URL
-      navigate("/dashboard", { replace: true });
+        if (emailFromParams) {
+          localStorage.setItem("userEmail", emailFromParams);
+          localStorage.setItem("isLoggedIn", "true"); // Set logged in flag
+          if (nameFromParams) {
+            localStorage.setItem("userName", nameFromParams);
+          }
+          if (pictureFromParams) {
+            localStorage.setItem("userPicture", pictureFromParams);
+          }
+          
+          // Update user info state
+          setUserInfo({
+            email: emailFromParams,
+            name: nameFromParams || undefined,
+            picture: pictureFromParams || undefined,
+            initials: getInitials(emailFromParams, nameFromParams || undefined),
+          });
+        }
+        
+        // Update Gmail connection status
+        setInputSources((prev) =>
+          prev.map((conn) =>
+            conn.id === "gmail"
+              ? { ...conn, connected: true, status: "active" as const, lastSync: "Just now" }
+              : conn
+          )
+        );
+        
+        // Check backend for onboarding status and redirect accordingly
+        try {
+          const authStatus = await apiGet("/auth/status");
+          if (!authStatus.onboarding_complete) {
+            navigate("/onboarding", { replace: true });
+          } else {
+            // Clean up URL but stay on dashboard
+            navigate("/dashboard", { replace: true });
+          }
+        } catch (error) {
+          // If API call fails, assume onboarding not complete
+          console.log("Could not check onboarding status:", error);
+          navigate("/onboarding", { replace: true });
+        }
     } else if (notionStatus === "connected" || notionStatus === "setup_needed") {
       // Notion OAuth successful - check configuration status
       const checkNotionStatus = async () => {
@@ -225,10 +256,7 @@ const Dashboard = () => {
           const storedEmail = localStorage.getItem("userEmail");
           if (storedEmail) {
             setUserEmail(storedEmail);
-            const notionResponse = await fetch(
-              `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
-            );
-            const notionData = await notionResponse.json();
+            const notionData = await apiGet("/notion/status");
             
             if (notionData.connected) {
               setDataSources((prev) =>
@@ -255,14 +283,17 @@ const Dashboard = () => {
           console.log("Could not check Notion status:", error);
         }
       };
-      checkNotionStatus();
-      // Clean up URL
-      navigate("/dashboard", { replace: true });
-    } else if (oauthError) {
-      console.error("OAuth error:", oauthError);
-      // Clean up URL
-      navigate("/dashboard", { replace: true });
-    }
+        checkNotionStatus();
+        // Clean up URL
+        navigate("/dashboard", { replace: true });
+      } else if (oauthError) {
+        console.error("OAuth error:", oauthError);
+        // Clean up URL
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    handleOAuthCallback();
 
     // Load user info from localStorage on mount
     const loadUserInfo = () => {
@@ -286,14 +317,9 @@ const Dashboard = () => {
     // Check connection status from backend and update user info
     const checkConnectionStatus = async () => {
       try {
-        // Get user email from localStorage to query auth status
-        const storedEmail = localStorage.getItem("userEmail");
-        const url = storedEmail 
-          ? `${API_BASE_URL}/auth/status?user_email=${encodeURIComponent(storedEmail)}`
-          : `${API_BASE_URL}/auth/status`;
+        // Check auth status using JWT
+        const data = await apiGet("/auth/status");
         
-        const response = await fetch(url);
-        const data = await response.json();
         if (data.connected) {
           setInputSources((prev) =>
             prev.map((conn) =>
@@ -318,30 +344,25 @@ const Dashboard = () => {
         }
 
         // Check Notion status
-        if (storedEmail) {
-          const notionResponse = await fetch(
-            `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
+        const notionData = await apiGet("/notion/status");
+        
+        if (notionData.connected) {
+          setDataSources((prev) =>
+            prev.map((conn) =>
+              conn.id === "notion"
+                ? { 
+                    ...conn, 
+                    connected: true, 
+                    configured: notionData.configured || false,
+                    status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
+                    lastSync: notionData.configured ? "Configured" : "Needs setup"
+                  }
+                : conn
+            )
           );
-          const notionData = await notionResponse.json();
-          
-          if (notionData.connected) {
-            setDataSources((prev) =>
-              prev.map((conn) =>
-                conn.id === "notion"
-                  ? { 
-                      ...conn, 
-                      connected: true, 
-                      configured: notionData.configured || false,
-                      status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
-                      lastSync: notionData.configured ? "Configured" : "Needs setup"
-                    }
-                  : conn
-              )
-            );
-          }
         }
       } catch (error) {
-        // Backend might not be running, ignore error
+        // Backend might not be running or token expired, ignore error
         console.log("Could not check connection status:", error);
       }
     };
@@ -378,28 +399,22 @@ const Dashboard = () => {
   const handleNotionSetupComplete = async () => {
     // Refresh Notion connection status after setup
     try {
-      const storedEmail = localStorage.getItem("userEmail");
-      if (storedEmail) {
-        const notionResponse = await fetch(
-          `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
+      const notionData = await apiGet("/notion/status");
+      
+      if (notionData.connected) {
+        setDataSources((prev) =>
+          prev.map((conn) =>
+            conn.id === "notion"
+              ? { 
+                  ...conn, 
+                  connected: true, 
+                  configured: notionData.configured || false,
+                  status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
+                  lastSync: notionData.configured ? "Configured" : "Needs setup"
+                }
+              : conn
+          )
         );
-        const notionData = await notionResponse.json();
-        
-        if (notionData.connected) {
-          setDataSources((prev) =>
-            prev.map((conn) =>
-              conn.id === "notion"
-                ? { 
-                    ...conn, 
-                    connected: true, 
-                    configured: notionData.configured || false,
-                    status: notionData.configured ? ("active" as const) : ("needs_attention" as const),
-                    lastSync: notionData.configured ? "Configured" : "Needs setup"
-                  }
-                : conn
-            )
-          );
-        }
       }
     } catch (error) {
       console.log("Could not refresh Notion status:", error);
@@ -451,12 +466,21 @@ const Dashboard = () => {
     );
   };
 
-  const handleLogout = () => {
-    // Clear user info from localStorage
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userPicture");
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to revoke Gmail account access
+      await apiPost("/auth/logout");
+    } catch (error) {
+      console.log("Logout error:", error);
+    } finally {
+      // Clear user info and token from localStorage
+      removeToken();
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userPicture");
+      localStorage.removeItem("isLoggedIn");
+      navigate("/");
+    }
   };
 
   return (
