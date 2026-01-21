@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { FileText, Table, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { API_BASE_URL } from "@/lib/config";
+import { apiGet, getToken } from "@/lib/api";
 import IntegrationWizardDialog, { type IntegrationType } from "./IntegrationWizardDialog";
 
 interface OutputDestinationScreenProps {
@@ -59,16 +59,17 @@ const OutputDestinationScreen = ({
       return; // Don't check backend if we just got a callback
     }
 
-    // Check backend connection status
+    // Check backend connection status (only if token is available)
     const checkConnectionStatus = async () => {
-      try {
-        const storedEmail = localStorage.getItem("userEmail");
-        if (!storedEmail) return;
+      const token = getToken();
+      
+      // Don't check if token is not available yet
+      if (!token) {
+        return;
+      }
 
-        const response = await fetch(
-          `${API_BASE_URL}/notion/status?user_email=${encodeURIComponent(storedEmail)}`
-        );
-        const data = await response.json();
+      try {
+        const data = await apiGet("/notion/status");
         
         // If Notion is connected, mark it as connected
         if (data.connected) {

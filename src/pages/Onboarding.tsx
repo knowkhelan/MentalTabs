@@ -5,6 +5,7 @@ import InputSourceScreen from "@/components/onboarding/InputSourceScreen";
 import OutputDestinationScreen from "@/components/onboarding/OutputDestinationScreen";
 import FirstThoughtScreen from "@/components/onboarding/FirstThoughtScreen";
 import SuccessScreen from "@/components/onboarding/SuccessScreen";
+import { setToken, apiGet, apiPost, getToken } from "@/lib/api";
 
 export type InputSource = "slack" | "whatsapp" | "email";
 export type OutputDestination = "notion" | "mental-tab" | null;
@@ -16,48 +17,110 @@ const Onboarding = () => {
   const [inputSources, setInputSources] = useState<InputSource[]>([]);
   const [outputDestination, setOutputDestination] = useState<OutputDestination>(null);
 
-  // Handle OAuth callbacks (Gmail and Notion)
+  // Handle OAuth callbacks (Gmail and Notion) - MUST RUN FIRST to extract token
   useEffect(() => {
-    const oauthStatus = searchParams.get("oauth");
-    const notionStatus = searchParams.get("notion");
-    const oauthError = searchParams.get("error");
+    const handleOAuthCallback = async () => {
+      const oauthStatus = searchParams.get("oauth");
+      const notionStatus = searchParams.get("notion");
+      const oauthError = searchParams.get("error");
 
-    if (oauthStatus === "success") {
-      // Gmail OAuth successful - email source should be marked as connected
-      // The InputSourceScreen component will handle updating its state
-      // Store user info if available
-      const emailFromParams = searchParams.get("email");
-      const nameFromParams = searchParams.get("name");
-      const pictureFromParams = searchParams.get("picture");
-      
-      if (emailFromParams) {
-        localStorage.setItem("userEmail", emailFromParams);
-        localStorage.setItem("isLoggedIn", "true");
-        // Don't set onboardingComplete here - let user go through onboarding
-        if (nameFromParams) {
-          localStorage.setItem("userName", nameFromParams);
+      if (oauthStatus === "success") {
+        // Gmail OAuth successful - email source should be marked as connected
+        // The InputSourceScreen component will handle updating its state
+        // Store user info if available
+        const emailFromParams = searchParams.get("email");
+        const nameFromParams = searchParams.get("name");
+        const pictureFromParams = searchParams.get("picture");
+        const tokenFromParams = searchParams.get("token");
+        
+        // Store JWT token FIRST - this is critical!
+        if (tokenFromParams) {
+          setToken(tokenFromParams);
         }
-        if (pictureFromParams) {
-          localStorage.setItem("userPicture", pictureFromParams);
+        
+        if (emailFromParams) {
+          localStorage.setItem("userEmail", emailFromParams);
+          localStorage.setItem("isLoggedIn", "true");
+          if (nameFromParams) {
+            localStorage.setItem("userName", nameFromParams);
+          }
+          if (pictureFromParams) {
+            localStorage.setItem("userPicture", pictureFromParams);
+          }
         }
+        
+        // Check backend for onboarding status after OAuth (token is now stored)
+        try {
+          const authStatus = await apiGet("/auth/status");
+          if (authStatus.onboarding_complete) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            // Clean up URL but stay on onboarding
+            navigate("/onboarding", { replace: true });
+          }
+        } catch (error) {
+          // If API call fails, stay on onboarding
+          console.log("Could not check onboarding status:", error);
+          navigate("/onboarding", { replace: true });
+        }
+      } else if (notionStatus === "connected" || notionStatus === "setup_needed") {
+        // Notion OAuth successful - OutputDestinationScreen will handle updating its state
+        // Navigate to step 2 if not already there, but don't clean up URL yet
+        // OutputDestinationScreen will clean it up after processing
+        if (step !== 2) {
+          setStep(2); // Go to step 2 (OutputDestinationScreen) if not already there
+        }
+        // Don't navigate/clean URL here - let OutputDestinationScreen handle it
+      } else if (oauthError) {
+        console.error("OAuth error:", oauthError);
+        // Clean up URL but stay on onboarding
+        navigate("/onboarding", { replace: true });
       }
+    };
+
+    handleOAuthCallback();
+  }, [searchParams, navigate, step]);
+
+  // Check if onboarding is already complete - redirect to dashboard if so
+  // This runs AFTER OAuth callback to ensure token is available
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      const token = getToken();
       
-      // Clean up URL but stay on onboarding
-      navigate("/onboarding", { replace: true });
-    } else if (notionStatus === "connected" || notionStatus === "setup_needed") {
-      // Notion OAuth successful - OutputDestinationScreen will handle updating its state
-      // Navigate to step 2 if not already there, but don't clean up URL yet
-      // OutputDestinationScreen will clean it up after processing
-      if (step !== 2) {
-        setStep(2); // Go to step 2 (OutputDestinationScreen) if not already there
+      // If user is not logged in, redirect to auth
+      if (isLoggedIn !== "true") {
+        navigate("/auth", { replace: true });
+        return;
       }
-      // Don't navigate/clean URL here - let OutputDestinationScreen handle it
-    } else if (oauthError) {
-      console.error("OAuth error:", oauthError);
-      // Clean up URL but stay on onboarding
-      navigate("/onboarding", { replace: true });
-    }
-  }, [searchParams, navigate]);
+
+      // If no token available, wait for OAuth callback to process
+      if (!token) {
+        // Check if we're in the middle of OAuth callback
+        const oauthStatus = searchParams.get("oauth");
+        if (oauthStatus !== "success") {
+          // Not an OAuth callback and no token - redirect to auth
+          navigate("/auth", { replace: true });
+        }
+        return;
+      }
+
+      // Check backend for onboarding status
+      try {
+        const authStatus = await apiGet("/auth/status");
+        if (authStatus.onboarding_complete) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+      } catch (error) {
+        // If API call fails (e.g., invalid token), redirect to auth
+        console.log("Could not check onboarding status:", error);
+        navigate("/auth", { replace: true });
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [navigate, searchParams]);
 
   const handleInputContinue = (sources: string[]) => {
     setInputSources(sources as InputSource[]);
@@ -73,10 +136,16 @@ const Onboarding = () => {
     setStep(4);
   };
 
-  const handleComplete = () => {
-    // Mark onboarding as complete
-    localStorage.setItem("onboardingComplete", "true");
-    navigate("/dashboard");
+  const handleComplete = async () => {
+    try {
+      // Mark onboarding as complete in backend
+      await apiPost("/auth/onboarding/complete");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Failed to mark onboarding complete:", error);
+      // Still navigate to dashboard even if API call fails
+      navigate("/dashboard");
+    }
   };
 
   return (
