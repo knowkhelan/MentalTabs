@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { MessageSquare, MessageCircle, Mail, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { API_BASE_URL } from "@/lib/config";
+import { apiGet, getToken } from "@/lib/api";
 import IntegrationWizardDialog, { type IntegrationType } from "./IntegrationWizardDialog";
 
 type SourceType = "slack" | "whatsapp" | "email";
@@ -66,16 +66,17 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
       return; // Don't check backend if we just got a callback
     }
 
-    // Check backend connection status
+    // Check backend connection status (only if token is available)
     const checkConnectionStatus = async () => {
-      try {
-        const storedEmail = localStorage.getItem("userEmail");
-        if (!storedEmail) return;
+      const token = getToken();
+      
+      // Don't check if token is not available yet
+      if (!token) {
+        return;
+      }
 
-        const response = await fetch(
-          `${API_BASE_URL}/auth/status?user_email=${encodeURIComponent(storedEmail)}`
-        );
-        const data = await response.json();
+      try {
+        const data = await apiGet("/auth/status");
         
         // If Gmail is connected, mark email as connected
         if (data.connected) {

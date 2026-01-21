@@ -1,20 +1,38 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
+import { removeToken } from "@/lib/api";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [expiredMessage, setExpiredMessage] = useState(false);
+
+  useEffect(() => {
+    // Check if redirected due to expired token
+    const expired = searchParams.get("expired");
+    if (expired === "true") {
+      setExpiredMessage(true);
+      // Clean up URL
+      navigate("/auth", { replace: true });
+    }
+    
+    // Clear any existing token when on auth page
+    removeToken();
+  }, [searchParams, navigate]);
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
     // Check if user email exists in localStorage (returning user)
     const storedEmail = localStorage.getItem("userEmail");
-    // Redirect to backend OAuth endpoint with returnTo parameter
-    // After successful OAuth, user will be redirected to onboarding
+    
+    // Always redirect to onboarding first - backend will handle redirect based on onboarding status
+    // The OAuth callback will check backend and redirect accordingly
     const returnTo = "/onboarding";
     const url = storedEmail
       ? `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}&user_email=${encodeURIComponent(storedEmail)}`
@@ -45,6 +63,14 @@ const Auth = () => {
 
         <Card className="border-border">
           <CardContent className="pt-6 pb-6">
+            {expiredMessage && (
+              <Alert className="mb-4" variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Your session has expired. Please sign in again.
+                </AlertDescription>
+              </Alert>
+            )}
             <Button
               type="button"
               variant="outline"
