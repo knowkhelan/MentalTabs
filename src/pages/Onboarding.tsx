@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import InputSourceScreen from "@/components/onboarding/InputSourceScreen";
 import OutputDestinationScreen from "@/components/onboarding/OutputDestinationScreen";
 import FirstThoughtScreen from "@/components/onboarding/FirstThoughtScreen";
@@ -16,6 +16,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [inputSources, setInputSources] = useState<InputSource[]>([]);
   const [outputDestination, setOutputDestination] = useState<OutputDestination>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
   // Handle OAuth callbacks (Gmail and Notion) - MUST RUN FIRST to extract token
   useEffect(() => {
@@ -50,16 +51,19 @@ const Onboarding = () => {
         }
         
         // Check backend for onboarding status after OAuth (token is now stored)
+        setIsCheckingStatus(true);
         try {
           const authStatus = await apiGet("/auth/status");
+          setIsCheckingStatus(false);
           if (authStatus.onboarding_complete) {
-            navigate("/dashboard", { replace: true });
+            navigate("/onboarding", { replace: true });
           } else {
             // Clean up URL but stay on onboarding
             navigate("/onboarding", { replace: true });
           }
         } catch (error) {
           // If API call fails, stay on onboarding
+          setIsCheckingStatus(false);
           console.log("Could not check onboarding status:", error);
           navigate("/onboarding", { replace: true });
         }
@@ -67,15 +71,18 @@ const Onboarding = () => {
         // Notion OAuth successful - OutputDestinationScreen will handle updating its state
         // Navigate to step 2 if not already there, but don't clean up URL yet
         // OutputDestinationScreen will clean it up after processing
+        setIsCheckingStatus(false);
         if (step !== 2) {
           setStep(2); // Go to step 2 (OutputDestinationScreen) if not already there
         }
         // Don't navigate/clean URL here - let OutputDestinationScreen handle it
       } else if (oauthError) {
+        setIsCheckingStatus(false);
         console.error("OAuth error:", oauthError);
         // Clean up URL but stay on onboarding
         navigate("/onboarding", { replace: true });
       }
+      // If no OAuth callback, let the second useEffect handle the status check
     };
 
     handleOAuthCallback();
@@ -90,6 +97,7 @@ const Onboarding = () => {
       
       // If user is not logged in, redirect to auth
       if (isLoggedIn !== "true") {
+        setIsCheckingStatus(false);
         navigate("/auth", { replace: true });
         return;
       }
@@ -100,20 +108,24 @@ const Onboarding = () => {
         const oauthStatus = searchParams.get("oauth");
         if (oauthStatus !== "success") {
           // Not an OAuth callback and no token - redirect to auth
+          setIsCheckingStatus(false);
           navigate("/auth", { replace: true });
         }
         return;
       }
 
       // Check backend for onboarding status
+      setIsCheckingStatus(true);
       try {
         const authStatus = await apiGet("/auth/status");
+        setIsCheckingStatus(false);
         if (authStatus.onboarding_complete) {
-          navigate("/dashboard", { replace: true });
+          navigate("/onboarding", { replace: true });
           return;
         }
       } catch (error) {
         // If API call fails (e.g., invalid token), redirect to auth
+        setIsCheckingStatus(false);
         console.log("Could not check onboarding status:", error);
         navigate("/auth", { replace: true });
       }
@@ -140,13 +152,25 @@ const Onboarding = () => {
     try {
       // Mark onboarding as complete in backend
       await apiPost("/auth/onboarding/complete");
-      navigate("/dashboard");
+      navigate("/onboarding");
     } catch (error) {
       console.error("Failed to mark onboarding complete:", error);
       // Still navigate to dashboard even if API call fails
-      navigate("/dashboard");
+      navigate("/onboarding");
     }
   };
+
+  // Show loader while checking onboarding status
+  if (isCheckingStatus) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Checking status...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
