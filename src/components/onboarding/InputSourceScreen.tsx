@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { apiGet, getToken } from "@/lib/api";
 import IntegrationWizardDialog, { type IntegrationType } from "./IntegrationWizardDialog";
+import SlackConnectDialog, { SlackConnectResponse } from "@/components/dashboard/SlackConnectDialog";
 
 type SourceType = "slack" | "whatsapp" | "email";
 
@@ -42,6 +43,18 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
   const [connectedSources, setConnectedSources] = useState<SourceType[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeIntegration, setActiveIntegration] = useState<IntegrationType | null>(null);
+  const [slackConnectOpen, setSlackConnectOpen] = useState(false);
+  const [slackConnectionUrl, setSlackConnectionUrl] = useState<string | null>(null);
+  const [slackEmailAddress, setSlackEmailAddress] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Get user email from localStorage
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("userEmail");
+    if (storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, []);
 
   // Check backend connection status on mount and handle Gmail OAuth callback
   useEffect(() => {
@@ -93,6 +106,31 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
             return prev;
           });
         }
+
+        // Check Slack connection status
+        try {
+          const slackData = await apiGet("/slack/status");
+          if (slackData.status === "ok" && slackData.connected) {
+            setConnectedSources((prev) => {
+              if (!prev.includes("slack")) {
+                return [...prev, "slack"];
+              }
+              return prev;
+            });
+            setSelectedSources((prev) => {
+              if (!prev.includes("slack")) {
+                return [...prev, "slack"];
+              }
+              return prev;
+            });
+            // Store Slack connection data for dialog
+            setSlackConnectionUrl(slackData.connection_url || null);
+            setSlackEmailAddress(slackData.slack_email_address || null);
+          }
+        } catch (slackError) {
+          // Slack status check failed, ignore
+          console.log("Could not check Slack status:", slackError);
+        }
       } catch (error) {
         console.log("Could not check connection status:", error);
       }
@@ -105,18 +143,47 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
     if (connectedSources.includes(id)) return;
     const option = inputOptions.find(opt => opt.id === id);
     if (option?.comingSoon) return; // Don't open wizard for coming soon features
+    
+    // Handle Slack separately with SlackConnectDialog
+    if (id === "slack") {
+      setSlackConnectOpen(true);
+      return;
+    }
+    
+    // For other integrations, use IntegrationWizardDialog
     setActiveIntegration(id);
     setWizardOpen(true);
   };
 
   const handleWizardConnect = () => {
-    if (activeIntegration && (activeIntegration === "slack" || activeIntegration === "whatsapp" || activeIntegration === "email")) {
+    if (activeIntegration && (activeIntegration === "whatsapp" || activeIntegration === "email")) {
       const source = activeIntegration as SourceType;
       setConnectedSources((prev) => [...prev, source]);
       setSelectedSources((prev) => 
         prev.includes(source) ? prev : [...prev, source]
       );
     }
+  };
+
+  const handleSlackConnect = (response: SlackConnectResponse, email: string) => {
+    // Update connection state based on Slack response
+    // If connected (whether configured or not), mark as connected
+    setConnectedSources((prev) => {
+      if (!prev.includes("slack")) {
+        return [...prev, "slack"];
+      }
+      return prev;
+    });
+    setSelectedSources((prev) => {
+      if (!prev.includes("slack")) {
+        return [...prev, "slack"];
+      }
+      return prev;
+    });
+    
+    // Store connection data for future dialog opens
+    setSlackConnectionUrl(response.connection_url || null);
+    setSlackEmailAddress(email);
   };
 
   const handleCheckboxChange = (id: SourceType, e: React.MouseEvent) => {
@@ -243,6 +310,16 @@ const InputSourceScreen = ({ onContinue }: InputSourceScreenProps) => {
         onOpenChange={setWizardOpen}
         integration={activeIntegration}
         onConnect={handleWizardConnect}
+      />
+
+      <SlackConnectDialog
+        open={slackConnectOpen}
+        onOpenChange={setSlackConnectOpen}
+        userEmail={userEmail}
+        connectionUrl={slackConnectionUrl}
+        slackEmailAddress={slackEmailAddress}
+        onConnect={handleSlackConnect}
+        isOnboarding={true}
       />
     </>
   );
