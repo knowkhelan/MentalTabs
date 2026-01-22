@@ -11,7 +11,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MessageSquare, ExternalLink, Info } from "lucide-react";
+import { MessageSquare, ExternalLink, Info, CheckCircle2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { apiPost } from "@/lib/api";
 
@@ -22,6 +22,7 @@ interface SlackConnectDialogProps {
   connectionUrl?: string | null;
   slackEmailAddress?: string | null;
   onConnect: (response: SlackConnectResponse, email: string) => void;
+  isOnboarding?: boolean; // If true, stop after connection and show message instead of configuration
 }
 
 export interface SlackConnectResponse {
@@ -38,11 +39,13 @@ const SlackConnectDialog = ({
   connectionUrl,
   slackEmailAddress,
   onConnect,
+  isOnboarding = false,
 }: SlackConnectDialogProps) => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [slackResponse, setSlackResponse] = useState<SlackConnectResponse | null>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Pre-fill email when dialog opens with slackEmailAddress
   useEffect(() => {
@@ -57,6 +60,7 @@ const SlackConnectDialog = ({
       setEmail("");
       setError(null);
       setSlackResponse(null);
+      setShowSuccessMessage(false);
     }
   }, [open]);
 
@@ -80,6 +84,13 @@ const SlackConnectDialog = ({
       // is_registered: false = connected but needs app installation (configuration step)
       onConnect(data, email.trim());
 
+      // If onboarding, show success message (don't show configuration)
+      if (isOnboarding) {
+        setIsSubmitting(false);
+        setShowSuccessMessage(true);
+        return;
+      }
+
       // If workspace is registered (fully configured), close dialog
       if (data.is_registered) {
         setIsSubmitting(false);
@@ -87,7 +98,7 @@ const SlackConnectDialog = ({
         onOpenChange(false);
       } else {
         setIsSubmitting(false);
-        // Dialog stays open to show configuration UI
+        // Dialog stays open to show configuration UI (dashboard only)
       }
     } catch (err) {
       console.error("Error connecting Slack:", err);
@@ -121,14 +132,33 @@ const SlackConnectDialog = ({
           </DialogTitle>
           <DialogDescription className="text-base">
             {
-              ((slackResponse && !slackResponse.is_registered) || (connectionUrl && !slackResponse)) ? 
-              "Connect Slack App with Workspace": "Enter the email address of your slack workspace."
+              showSuccessMessage ? 
+              "" : 
+              ((slackResponse && !slackResponse.is_registered && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding)) ? 
+              "Connect Slack App with Workspace": 
+              "Enter the email address of your slack workspace."
             }
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-6">
-          {(slackResponse && !slackResponse.is_registered) || (connectionUrl && !slackResponse) ? (
+          {showSuccessMessage && slackResponse ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-center">
+                {slackResponse.is_registered
+                  ? "All steps of Slack are completed for you"
+                  : "Slack connected successfully"}
+              </h3>
+              {!slackResponse.is_registered && (
+                <p className="text-sm text-muted-foreground text-center max-w-sm">
+                  Configuration needs to be done after going on the dashboard.
+                </p>
+              )}
+            </div>
+          ) : (slackResponse && !slackResponse.is_registered && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding) ? (
             <div className="space-y-4">
               <Label htmlFor="slack-email" className="text-sm">
                 Workspace Email
@@ -179,7 +209,11 @@ const SlackConnectDialog = ({
         </div>
 
         <DialogFooter className="border-t pt-4 mt-4">
-          {(slackResponse && !slackResponse.is_registered) || (connectionUrl && !slackResponse) ? (
+          {showSuccessMessage ? (
+            <Button onClick={handleClose} className="w-full">
+              Got it
+            </Button>
+          ) : (slackResponse && !slackResponse.is_registered && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding) ? (
             <>
               <Button variant="outline" onClick={handleClose}>
                 Cancel

@@ -56,7 +56,7 @@ const Onboarding = () => {
           const authStatus = await apiGet("/auth/status");
           setIsCheckingStatus(false);
           if (authStatus.onboarding_complete) {
-            navigate("/onboarding", { replace: true });
+            navigate("/dashboard", { replace: true });
           } else {
             // Clean up URL but stay on onboarding
             navigate("/onboarding", { replace: true });
@@ -120,7 +120,7 @@ const Onboarding = () => {
         const authStatus = await apiGet("/auth/status");
         setIsCheckingStatus(false);
         if (authStatus.onboarding_complete) {
-          navigate("/onboarding", { replace: true });
+          navigate("/dashboard", { replace: true });
           return;
         }
       } catch (error) {
@@ -152,11 +152,11 @@ const Onboarding = () => {
     try {
       // Mark onboarding as complete in backend
       await apiPost("/auth/onboarding/complete");
-      navigate("/onboarding");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Failed to mark onboarding complete:", error);
       // Still navigate to dashboard even if API call fails
-      navigate("/onboarding");
+      navigate("/dashboard");
     }
   };
 
