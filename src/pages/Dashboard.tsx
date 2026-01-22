@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
-import SlackConnectDialog from "@/components/dashboard/SlackConnectDialog";
+import SlackConnectDialog, { SlackConnectResponse } from "@/components/dashboard/SlackConnectDialog";
 import logo from "@/assets/logo.png";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
@@ -414,12 +414,11 @@ const Dashboard = () => {
     // Special handling for Slack - open SlackConnectDialog
     if (id === "slack" && type === "input") {
       const slackConnection = inputSources.find((conn) => conn.id === "slack");
-      if (slackConnection?.connected && !slackConnection?.configured) {
-        setSlackConnectionUrl(slackConnection.connection_url);
-        setSlackEmailAddress(slackConnection.slack_email_address);
-        setSlackConnectOpen(true);
-        return;
-      }
+      // Always read from inputSources to ensure we have the latest connection state
+      setSlackConnectionUrl(slackConnection?.connection_url || null);
+      setSlackEmailAddress(slackConnection?.slack_email_address || null);
+      setSlackConnectOpen(true);
+      return;
     }
     
     // Other integrations use the old config dialog
@@ -481,12 +480,9 @@ const Dashboard = () => {
     // Special handling for Slack - open dialog
     if (id === "slack" && type === "input") {
       const slackConnection = inputSources.find((conn) => conn.id === "slack");
-      if (slackConnection?.connection_url) {
-        setSlackConnectionUrl(slackConnection.connection_url);
-      }
-      if (slackConnection?.slack_email_address) {
-        setSlackEmailAddress(slackConnection.slack_email_address);
-      }
+      // Always read from inputSources to ensure we have the latest connection state
+      setSlackConnectionUrl(slackConnection?.connection_url || null);
+      setSlackEmailAddress(slackConnection?.slack_email_address || null);
       setSlackConnectOpen(true);
       return;
     }
@@ -501,49 +497,36 @@ const Dashboard = () => {
     );
   };
 
-  const handleSlackConnect = (email: string) => {
-    // Connection is handled by the API response in SlackConnectDialog
-    // Refresh Slack status after connection
-    const refreshSlackStatus = async () => {
-      try {
-        const storedEmail = localStorage.getItem("userEmail");
-        if (storedEmail) {
-          const slackResponse = await fetch(
-            `${API_BASE_URL}/slack/status?user_email=${encodeURIComponent(storedEmail)}`
-          );
-          const slackData = await slackResponse.json();
-          
-          if (slackData.status === "ok") {
-            setInputSources((prev) =>
-              prev.map((conn) =>
-                conn.id === "slack"
-                  ? {
-                      ...conn,
-                      connected: slackData.connected || false,
-                      configured: slackData.configured || false,
-                      connection_url: slackData.connection_url || null,
-                      slack_email_address: slackData.slack_email_address || null,
-                      status: slackData.configured
-                        ? ("active" as const)
-                        : slackData.connected
-                        ? ("needs_attention" as const)
-                        : ("disconnected" as const),
-                      lastSync: slackData.configured
-                        ? "Configured"
-                        : slackData.connected
-                        ? "Needs setup"
-                        : null,
-                    }
-                  : conn
-              )
-            );
-          }
-        }
-      } catch (error) {
-        console.log("Could not refresh Slack status:", error);
-      }
-    };
-    refreshSlackStatus();
+  const handleSlackConnect = (response: SlackConnectResponse, email: string) => {
+    // Update Dashboard state based on the /slack/connect response
+    // is_registered: true means fully connected and configured
+    // is_registered: false means connected but needs app installation (configuration step)
+    const isConfigured = response.is_registered;
+    const isConnected = true; // If we got a response, connection was successful
+    
+    setInputSources((prev) =>
+      prev.map((conn) =>
+        conn.id === "slack"
+          ? {
+              ...conn,
+              connected: isConnected,
+              configured: isConfigured,
+              connection_url: response.connection_url || null,
+              slack_email_address: email,
+              status: isConfigured
+                ? ("active" as const)
+                : ("needs_attention" as const),
+              lastSync: isConfigured
+                ? "Configured"
+                : "Needs setup",
+            }
+          : conn
+      )
+    );
+    
+    // Update dialog props with connection data for future opens
+    setSlackConnectionUrl(response.connection_url || null);
+    setSlackEmailAddress(email);
   };
 
   const handleRemove = (id: string, type: "input" | "data") => {
@@ -880,13 +863,7 @@ const Dashboard = () => {
         {/* Slack Connect Dialog */}
         <SlackConnectDialog
           open={slackConnectOpen}
-          onOpenChange={(open) => {
-            setSlackConnectOpen(open);
-            if (!open) {
-              setSlackConnectionUrl(null);
-              setSlackEmailAddress(null);
-            }
-          }}
+          onOpenChange={setSlackConnectOpen}
           userEmail={userEmail}
           connectionUrl={slackConnectionUrl}
           slackEmailAddress={slackEmailAddress}

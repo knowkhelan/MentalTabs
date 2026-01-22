@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, ExternalLink, Info } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
+import { apiPost } from "@/lib/api";
 
 interface SlackConnectDialogProps {
   open: boolean;
@@ -20,10 +21,10 @@ interface SlackConnectDialogProps {
   userEmail: string | null;
   connectionUrl?: string | null;
   slackEmailAddress?: string | null;
-  onConnect: (email: string) => void;
+  onConnect: (response: SlackConnectResponse, email: string) => void;
 }
 
-interface SlackConnectResponse {
+export interface SlackConnectResponse {
   domain: string;
   is_registered: boolean;
   workspace_id: string;
@@ -69,33 +70,24 @@ const SlackConnectDialog = ({
     setSlackResponse(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/slack/connect`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_email: userEmail,
-          slack_email_address: email.trim(),
-        }),
+      const data: SlackConnectResponse = await apiPost("/slack/connect", {
+        slack_email_address: email.trim(),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to connect Slack workspace");
-      }
-
-      const data: SlackConnectResponse = await response.json();
       setSlackResponse(data);
 
-      // If workspace is registered, proceed with connection
+      // Update Dashboard state with connection response
+      // is_registered: true = fully connected and configured
+      // is_registered: false = connected but needs app installation (configuration step)
+      onConnect(data, email.trim());
+
+      // If workspace is registered (fully configured), close dialog
       if (data.is_registered) {
         setIsSubmitting(false);
-        onConnect(email.trim());
         setEmail("");
         onOpenChange(false);
       } else {
         setIsSubmitting(false);
+        // Dialog stays open to show configuration UI
       }
     } catch (err) {
       console.error("Error connecting Slack:", err);
@@ -107,7 +99,7 @@ const SlackConnectDialog = ({
   const handleConnectApp = () => {
     // Use connection_url from API response or prop
     const slackAppUrl = slackResponse?.connection_url || connectionUrl || "https://slack.com/apps";
-    window.open(slackAppUrl, "_blank");
+    window.location.href = slackAppUrl;
   };
 
   const handleClose = () => {
