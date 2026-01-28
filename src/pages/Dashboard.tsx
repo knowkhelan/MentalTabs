@@ -26,6 +26,7 @@ import {
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
 import SlackConnectDialog, { SlackConnectResponse } from "@/components/dashboard/SlackConnectDialog";
+import GmailLabelVerifyDialog from "@/components/dashboard/GmailLabelVerifyDialog";
 import logo from "@/assets/logo.png";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
@@ -150,6 +151,7 @@ const Dashboard = () => {
   const [slackConnectOpen, setSlackConnectOpen] = useState(false);
   const [slackConnectionUrl, setSlackConnectionUrl] = useState<string | null>(null);
   const [slackEmailAddress, setSlackEmailAddress] = useState<string | null>(null);
+  const [gmailLabelVerifyOpen, setGmailLabelVerifyOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [columnConfigs, setColumnConfigs] = useState<Record<string, string[]>>({
     notion: ["title", "status", "date-created"],
@@ -233,6 +235,7 @@ const Dashboard = () => {
         }
         
         // Update Gmail connection status
+        // Note: configured status will be updated from backend response below
         setInputSources((prev) =>
           prev.map((conn) =>
             conn.id === "gmail"
@@ -244,6 +247,22 @@ const Dashboard = () => {
         // Check backend for onboarding status and redirect accordingly
         try {
           const authStatus = await apiGet("/auth/status");
+          // Update Gmail configured status from backend
+          if (authStatus.configured !== undefined && authStatus.connected) {
+            const isConfigured = authStatus.configured || false;
+            setInputSources((prev) =>
+              prev.map((conn) =>
+                conn.id === "gmail"
+                  ? { 
+                      ...conn, 
+                      configured: isConfigured,
+                      status: isConfigured ? ("active" as const) : ("needs_attention" as const),
+                      lastSync: isConfigured ? "Just now" : "Needs setup"
+                    }
+                  : conn
+              )
+            );
+          }
           if (!authStatus.onboarding_complete) {
             navigate("/onboarding", { replace: true });
           } else {
@@ -327,10 +346,17 @@ const Dashboard = () => {
         const data = await apiGet("/auth/status");
         
         if (data.connected) {
+          const isConfigured = data.configured || false;
           setInputSources((prev) =>
             prev.map((conn) =>
               conn.id === "gmail"
-                ? { ...conn, connected: true, status: "active" as const, lastSync: "Connected" }
+                ? { 
+                    ...conn, 
+                    connected: true, 
+                    configured: isConfigured,
+                    status: isConfigured ? ("active" as const) : ("needs_attention" as const),
+                    lastSync: isConfigured ? "Connected" : "Needs setup"
+                  }
                 : conn
             )
           );
@@ -419,6 +445,15 @@ const Dashboard = () => {
       setSlackEmailAddress(slackConnection?.slack_email_address || null);
       setSlackConnectOpen(true);
       return;
+    }
+
+    // Special handling for Gmail - open label verification dialog if not configured
+    if (id === "gmail" && type === "input") {
+      const gmailConnection = inputSources.find((conn) => conn.id === "gmail");
+      if (gmailConnection && !gmailConnection.configured) {
+        setGmailLabelVerifyOpen(true);
+        return;
+      }
     }
     
     // Other integrations use the old config dialog
@@ -527,6 +562,22 @@ const Dashboard = () => {
     // Update dialog props with connection data for future opens
     setSlackConnectionUrl(response.connection_url || null);
     setSlackEmailAddress(email);
+  };
+
+  const handleGmailLabelVerifySuccess = () => {
+    // Update Gmail connection state to mark as configured and set status to active
+    setInputSources((prev) =>
+      prev.map((conn) =>
+        conn.id === "gmail"
+          ? { 
+              ...conn, 
+              configured: true,
+              status: "active" as const,
+              lastSync: "Configured"
+            }
+          : conn
+      )
+    );
   };
 
   const handleRemove = (id: string, type: "input" | "data") => {
@@ -704,8 +755,17 @@ const Dashboard = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        disabled={connection.id === "slack" && connection.configured}
-                        onClick={() => connection.id === "slack" && !connection.configured ? handleOpenConfig(connection.id, "input") : undefined}
+                        disabled={
+                          (connection.id === "slack" && connection.configured) ||
+                          (connection.id === "gmail" && connection.configured)
+                        }
+                        onClick={() => {
+                          if (connection.id === "slack" && !connection.configured) {
+                            handleOpenConfig(connection.id, "input");
+                          } else if (connection.id === "gmail" && !connection.configured) {
+                            handleOpenConfig(connection.id, "input");
+                          }
+                        }}
                       >
                         <Settings className="w-3 h-3 mr-1" />
                         Configure
@@ -868,6 +928,13 @@ const Dashboard = () => {
           connectionUrl={slackConnectionUrl}
           slackEmailAddress={slackEmailAddress}
           onConnect={handleSlackConnect}
+        />
+
+        {/* Gmail Label Verify Dialog */}
+        <GmailLabelVerifyDialog
+          open={gmailLabelVerifyOpen}
+          onOpenChange={setGmailLabelVerifyOpen}
+          onVerifySuccess={handleGmailLabelVerifySuccess}
         />
 
         {/* Stats Section */}
