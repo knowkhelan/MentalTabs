@@ -45,7 +45,7 @@ const GmailLabelVerifyDialog = ({
     setError(null);
 
     try {
-      const data: VerifyLabelResponse = await apiPost("/auth/gmail/verify-label/");
+      const data: VerifyLabelResponse = await apiPost("/auth/gmail/verify-label");
       
       if (data.is_label_created) {
         setShowSuccess(true);
