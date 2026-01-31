@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, ExternalLink, Info, CheckCircle2 } from "lucide-react";
-import { API_BASE_URL } from "@/lib/config";
 import { apiPost } from "@/lib/api";
 
 interface SlackConnectDialogProps {
@@ -173,9 +172,27 @@ const SlackConnectDialog = ({
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <AlertDescription className="text-blue-900 dark:text-blue-100">
-                  You need to connect the slack app to your workspace of above email address.
+                  Click "Connect App" below to install the MentalTabs app to your workspace
                 </AlertDescription>
               </Alert>
+
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <h4 className="font-semibold text-sm mb-2">How to Use After Installation:</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">Option 1:</span>
+                    <span>Type <span className="font-mono text-xs bg-background px-1.5 py-0.5 rounded">/mentaltabs [your text]</span> in any channel or DM</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">Option 2:</span>
+                    <span>Right-click any message → Apps → Send to MentalTabs</span>
+                  </li>
+                  <li className="flex gap-2 mt-2">
+                    <span>•</span>
+                    <span>All captured items will appear in your Notion database with a link back to the original Slack message</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -197,8 +214,27 @@ const SlackConnectDialog = ({
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                This email will be used to connect your Slack workspace.
+                Enter the email address associated with your Slack workspace
               </p>
+
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <h4 className="font-semibold text-sm mb-2">What happens next:</h4>
+                <ol className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">1.</span>
+                    <span>We'll verify if MentalTabs is installed in your workspace</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">2.</span>
+                    <span>If not installed, you'll get a link to add it to your workspace</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground">3.</span>
+                    <span>Once connected, you can use <span className="font-mono text-xs bg-background px-1.5 py-0.5 rounded">/mentaltabs</span> or right-click messages to capture thoughts</span>
+                  </li>
+                </ol>
+              </div>
+
               {error && (
                 <Alert variant="destructive" className="mt-4">
                   <AlertDescription>{error}</AlertDescription>

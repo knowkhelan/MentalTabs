@@ -96,7 +96,7 @@ const GmailLabelVerifyDialog = ({
                 Label Verified Successfully
               </h3>
               <p className="text-sm text-muted-foreground text-center max-w-sm">
-                Your Gmail account is now fully configured.
+                Your Gmail account is now fully configured. Emails labeled "mentaltabs" will sync to Notion every 30 minutes.
               </p>
             </div>
           ) : (
@@ -104,9 +104,53 @@ const GmailLabelVerifyDialog = ({
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <AlertDescription className="text-blue-900 dark:text-blue-100">
-                  You need to create a label with the name <strong>"mentaltabs"</strong> on your Gmail account.
+                  Complete the setup by creating a label named <strong>"mentaltabs"</strong> in Gmail
                 </AlertDescription>
               </Alert>
+
+              <div className="space-y-3">
+                <h4 className="font-semibold text-sm">Setup Steps:</h4>
+                <ol className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground min-w-[20px]">1.</span>
+                    <span>Open Gmail and go to Settings (gear icon) → "See all settings"</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground min-w-[20px]">2.</span>
+                    <span>Click on the "Labels" tab</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground min-w-[20px]">3.</span>
+                    <span>Scroll down and click "Create new label"</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground min-w-[20px]">4.</span>
+                    <span>Name it <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">mentaltabs</span> (lowercase, no spaces)</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-semibold text-foreground min-w-[20px]">5.</span>
+                    <span>Click "Create" and then come back here to verify</span>
+                  </li>
+                </ol>
+
+                <div className="mt-4 p-3 bg-muted rounded-lg">
+                  <h4 className="font-semibold text-sm mb-2">How to Use:</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex gap-2">
+                      <span>•</span>
+                      <span>Apply the "mentaltabs" label to any email you want synced</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span>•</span>
+                      <span>Our backend checks every 30 minutes and syncs labeled emails to your Notion database</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span>•</span>
+                      <span>Each Notion entry includes a backlink to the original email</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
 
               {error && (
                 <Alert variant="destructive" className="mt-4">
