@@ -106,18 +106,23 @@ const NotionContent = ({ onConnect, isConnecting }: { onConnect: () => void; isC
       <div className="space-y-4">
         <StepItem
           icon={<LogIn className="w-4 h-4" />}
-          title="Login"
-          description="Authorize your Notion account."
+          title="1. Authorize Notion"
+          description="Click 'Connect Notion' above to sign in and authorize access to your Notion workspace."
+        />
+        <StepItem
+          icon={<FileText className="w-4 h-4" />}
+          title="2. Select Page"
+          description="Choose which Notion page should contain your MentalTabs database."
         />
         <StepItem
           icon={<Database className="w-4 h-4" />}
-          title="Select Database"
-          description="Choose the specific database where you want your thoughts to appear."
+          title="3. Configure Database"
+          description="Customize the columns for your database (Title, Status, Source, Date Created, Notes, etc.)."
         />
         <StepItem
-          icon={<UserPlus className="w-4 h-4" />}
-          title="Add Connection"
-          description={<>Click <span className="font-medium">"Add connections"</span> in the database settings to allow our integration to write to it.</>}
+          icon={<CheckCircle2 className="w-4 h-4" />}
+          title="4. Start Capturing"
+          description="Once setup is complete, all items from your connected sources will automatically sync to this Notion database."
         />
       </div>
     </div>
@@ -185,12 +190,12 @@ const SlackContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
         {isConnecting ? (
           <span className="flex items-center gap-2">
             <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            Installing...
+            Connecting...
           </span>
         ) : (
           <>
-            <Download className="w-5 h-5 mr-2" />
-            Install App
+            <MessageSquare className="w-5 h-5 mr-2" />
+            Connect Slack
           </>
         )}
       </Button>
@@ -200,30 +205,30 @@ const SlackContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
 
     {/* How to Setup & Use */}
     <div className="p-6 bg-muted/30">
-      <h3 className="text-sm font-semibold text-foreground mb-4">How it Works</h3>
+      <h3 className="text-sm font-semibold text-foreground mb-4">Setup & Usage</h3>
       <div className="space-y-4">
         <StepItem
-          icon={<Download className="w-4 h-4" />}
-          title="Install"
-          description={<>Click on <span className="font-medium">"Install"</span> above to add our app to your workspace.</>}
-          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
-        />
-        <StepItem
-          icon={<Bot className="w-4 h-4" />}
-          title="Direct Message"
-          description="DM the bot to save private thoughts."
-          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
-        />
-        <StepItem
-          icon={<Smile className="w-4 h-4" />}
-          title="Emoji Trigger"
-          description={<>React with a saved emoji (e.g., 💾) to save any message.</>}
-          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
-        />
-        <StepItem
           icon={<AtSign className="w-4 h-4" />}
-          title="Tagging"
-          description="Mention the bot in a channel to save that specific conversation."
+          title="1. Enter Workspace Email"
+          description="Provide your Slack workspace email to verify MentalTabs app installation."
+          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
+        />
+        <StepItem
+          icon={<Download className="w-4 h-4" />}
+          title="2. Install App"
+          description="If not already installed, you'll get a link to add MentalTabs to your workspace."
+          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
+        />
+        <StepItem
+          icon={<Hash className="w-4 h-4" />}
+          title="3. Use Slash Command"
+          description={<>Type <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">/mentaltabs [text]</span> in any channel or DM to capture thoughts to Notion.</>}
+          accentColor="bg-[#4A154B]/10 text-[#4A154B]"
+        />
+        <StepItem
+          icon={<Copy className="w-4 h-4" />}
+          title="4. Right-Click Messages"
+          description="Right-click any message → Apps → Send to MentalTabs to save it to Notion with a backlink."
           accentColor="bg-[#4A154B]/10 text-[#4A154B]"
         />
       </div>
@@ -277,20 +282,20 @@ const EmailContent = ({ onConnect, isConnecting }: { onConnect: () => void; isCo
         <div className="space-y-4">
           <StepItem
             icon={<LogIn className="w-4 h-4" />}
-            title="Sign In"
-            description="Click 'Connect Gmail' to sign in with your Google account."
-            accentColor="bg-[#EA4335]/10 text-[#EA4335]"
-          />
-          <StepItem
-            icon={<Mail className="w-4 h-4" />}
-            title="Authorize Access"
-            description="Grant permission to read your Gmail inbox (read-only access)."
+            title="1. Sign In"
+            description="Click 'Connect Gmail' above to authorize with your Google account."
             accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
           <StepItem
             icon={<Hash className="w-4 h-4" />}
-            title="Apply Label"
-            description={<>Apply the label <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">mentaltabs</span> to any email you want synced to Notion.</>}
+            title="2. Create Label"
+            description={<>In Gmail Settings → Labels, create a label named <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">mentaltabs</span> (lowercase, no spaces).</>}
+            accentColor="bg-[#EA4335]/10 text-[#EA4335]"
+          />
+          <StepItem
+            icon={<Mail className="w-4 h-4" />}
+            title="3. Apply & Sync"
+            description="Apply the 'mentaltabs' label to any email. Our backend syncs labeled emails to Notion every 30 minutes with backlinks to the original email."
             accentColor="bg-[#EA4335]/10 text-[#EA4335]"
           />
         </div>
