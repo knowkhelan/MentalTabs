@@ -12,12 +12,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Plus,
   Settings,
   LogOut,
   Edit,
   X,
   RefreshCw,
+  Mail,
+  MessageSquare,
+  MessageCircle,
+  FileText,
+  Sheet,
+  ExternalLink,
+  Plus,
 } from "lucide-react";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
@@ -59,7 +65,7 @@ const mockInputSources: Connection[] = [
   {
     id: "gmail",
     name: "Gmail",
-    icon: "📧",
+    icon: "gmail",
     connected: false,
     status: "disconnected",
     lastSync: null,
@@ -67,7 +73,7 @@ const mockInputSources: Connection[] = [
   {
     id: "slack",
     name: "Slack",
-    icon: "💬",
+    icon: "slack",
     connected: false,
     status: "disconnected",
     lastSync: null,
@@ -75,7 +81,7 @@ const mockInputSources: Connection[] = [
   {
     id: "whatsapp",
     name: "WhatsApp",
-    icon: "📱",
+    icon: "whatsapp",
     connected: false,
     status: "disconnected",
     lastSync: null,
@@ -87,7 +93,7 @@ const mockDataSources: Connection[] = [
   {
     id: "notion",
     name: "Notion",
-    icon: "📝",
+    icon: "notion",
     connected: false,
     status: "disconnected",
     lastSync: null,
@@ -95,7 +101,7 @@ const mockDataSources: Connection[] = [
   {
     id: "google-sheets",
     name: "Google Sheets",
-    icon: "📊",
+    icon: "sheets",
     connected: false,
     status: "disconnected",
     lastSync: null,
@@ -127,6 +133,18 @@ const getStatusLabel = (status: string) => {
     default:
       return "Unknown";
   }
+};
+
+// Icon mapping function
+const getConnectionIcon = (iconName: string) => {
+  const iconMap: Record<string, React.ReactNode> = {
+    gmail: <Mail className="w-6 h-6 text-[#EA4335]" />,
+    slack: <MessageSquare className="w-6 h-6 text-[#4A154B]" />,
+    whatsapp: <MessageCircle className="w-6 h-6 text-[#25D366]" />,
+    notion: <FileText className="w-6 h-6 text-foreground" />,
+    sheets: <Sheet className="w-6 h-6 text-[#0F9D58]" />,
+  };
+  return iconMap[iconName] || <FileText className="w-6 h-6" />;
 };
 
 const Dashboard = () => {
@@ -701,8 +719,8 @@ const Dashboard = () => {
               Connections
             </h2>
             <Button variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Connection
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Missing an app you use? Let us know!
             </Button>
           </div>
 
@@ -712,7 +730,9 @@ const Dashboard = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{connection.icon}</span>
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                        {getConnectionIcon(connection.icon)}
+                      </div>
                       <div>
                         <h3 className="font-medium text-foreground">
                           {connection.name}
@@ -805,8 +825,8 @@ const Dashboard = () => {
               Data Sources
             </h2>
             <Button variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Data Source
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Missing an app you use? Let us know!
             </Button>
           </div>
 
@@ -816,7 +836,9 @@ const Dashboard = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{connection.icon}</span>
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                        {getConnectionIcon(connection.icon)}
+                      </div>
                       <div>
                         <h3 className="font-medium text-foreground">
                           {connection.name}
