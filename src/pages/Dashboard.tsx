@@ -12,10 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  MessageSquare,
-  Calendar,
-  TrendingUp,
-  Link2,
   Plus,
   Settings,
   LogOut,
@@ -57,13 +53,6 @@ const getInitials = (email?: string, name?: string): string => {
     return email[0].toUpperCase();
   }
   return "U";
-};
-
-const mockStats = {
-  totalMessages: 1247,
-  messagesToday: 23,
-  messagesThisWeek: 156,
-  activeConnections: 3,
 };
 
 const mockInputSources: Connection[] = [
@@ -936,71 +925,6 @@ const Dashboard = () => {
           onOpenChange={setGmailLabelVerifyOpen}
           onVerifySuccess={handleGmailLabelVerifySuccess}
         />
-
-        {/* Stats Section */}
-        <section>
-          <h2 className="font-display text-xl font-semibold text-foreground mb-6">
-            Statistics
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Total Messages
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-display font-bold text-foreground">
-                  {mockStats.totalMessages.toLocaleString()}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Messages Today
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-display font-bold text-foreground">
-                  {mockStats.messagesToday}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
-                  This Week
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-display font-bold text-foreground">
-                  {mockStats.messagesThisWeek}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Link2 className="w-4 h-4" />
-                  Active Connections
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-display font-bold text-foreground">
-                  {mockStats.activeConnections}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
       </main>
     </div>
   );
