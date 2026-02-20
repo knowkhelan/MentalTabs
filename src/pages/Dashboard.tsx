@@ -22,7 +22,9 @@ import {
   Edit,
   X,
   RefreshCw,
+  Mail,
 } from "lucide-react";
+import { toast } from "sonner";
 import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
 import SlackConnectDialog, { SlackConnectResponse } from "@/components/dashboard/SlackConnectDialog";
@@ -152,6 +154,7 @@ const Dashboard = () => {
   const [slackConnectionUrl, setSlackConnectionUrl] = useState<string | null>(null);
   const [slackEmailAddress, setSlackEmailAddress] = useState<string | null>(null);
   const [gmailLabelVerifyOpen, setGmailLabelVerifyOpen] = useState(false);
+  const [gmailSyncInProgress, setGmailSyncInProgress] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [columnConfigs, setColumnConfigs] = useState<Record<string, string[]>>({
     notion: ["title", "status", "date-created"],
@@ -580,6 +583,18 @@ const Dashboard = () => {
     );
   };
 
+  const handleSyncEmails = async () => {
+    setGmailSyncInProgress(true);
+    try {
+      const res = await apiPost<{ message: string }>("/auth/sync-emails/");
+      toast.success(res.message, { duration: 4000 });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sync failed", { duration: 4000 });
+    } finally {
+      setGmailSyncInProgress(false);
+    }
+  };
+
   const handleRemove = (id: string, type: "input" | "data") => {
     const setter = type === "input" ? setInputSources : setDataSources;
     setter((prev) =>
@@ -751,25 +766,37 @@ const Dashboard = () => {
 
                   {connection.connected ? (
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        disabled={
-                          (connection.id === "slack" && connection.configured) ||
-                          (connection.id === "gmail" && connection.configured)
-                        }
-                        onClick={() => {
-                          if (connection.id === "slack" && !connection.configured) {
-                            handleOpenConfig(connection.id, "input");
-                          } else if (connection.id === "gmail" && !connection.configured) {
-                            handleOpenConfig(connection.id, "input");
+                      {connection.id === "gmail" && connection.configured ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          disabled={gmailSyncInProgress}
+                          onClick={handleSyncEmails}
+                        >
+                          <Mail className="w-3 h-3 mr-1" />
+                          {gmailSyncInProgress ? "Syncing…" : "Sync Emails Now"}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          disabled={
+                            connection.id === "slack" && connection.configured
                           }
-                        }}
-                      >
-                        <Settings className="w-3 h-3 mr-1" />
-                        Configure
-                      </Button>
+                          onClick={() => {
+                            if (connection.id === "slack" && !connection.configured) {
+                              handleOpenConfig(connection.id, "input");
+                            } else if (connection.id === "gmail" && !connection.configured) {
+                              handleOpenConfig(connection.id, "input");
+                            }
+                          }}
+                        >
+                          <Settings className="w-3 h-3 mr-1" />
+                          Configure
+                        </Button>
+                      )}
                       {connection.status === "needs_attention" && (
                         <Button
                           variant="outline"
