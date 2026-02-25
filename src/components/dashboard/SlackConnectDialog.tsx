@@ -26,10 +26,7 @@ interface SlackConnectDialogProps {
 }
 
 export interface SlackConnectResponse {
-  domain: string;
-  is_registered: boolean;
-  workspace_id: string;
-  connection_url?: string | null;
+  connection_url: string;
 }
 
 const SlackConnectDialog = ({
@@ -79,9 +76,6 @@ const SlackConnectDialog = ({
       });
       setSlackResponse(data);
 
-      // Update Dashboard state with connection response
-      // is_registered: true = fully connected and configured
-      // is_registered: false = connected but needs app installation (configuration step)
       onConnect(data, email.trim());
 
       // If onboarding, show success message (don't show configuration)
@@ -91,15 +85,8 @@ const SlackConnectDialog = ({
         return;
       }
 
-      // If workspace is registered (fully configured), close dialog
-      if (data.is_registered) {
-        setIsSubmitting(false);
-        setEmail("");
-        onOpenChange(false);
-      } else {
-        setIsSubmitting(false);
-        // Dialog stays open to show configuration UI (dashboard only)
-      }
+      // Dialog stays open to show "Connect App" step - user selects workspace via OAuth
+      setIsSubmitting(false);
     } catch (err) {
       console.error("Error connecting Slack:", err);
       setError(err instanceof Error ? err.message : "Failed to connect Slack workspace");
@@ -132,11 +119,11 @@ const SlackConnectDialog = ({
           </DialogTitle>
           <DialogDescription className="text-base">
             {
-              showSuccessMessage ? 
-              "" : 
-              ((slackResponse && !slackResponse.is_registered && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding)) ? 
-              "Connect Slack App with Workspace": 
-              "Enter the email address of your slack workspace."
+              showSuccessMessage
+                ? ""
+                : (slackResponse && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding)
+                ? "Select your workspace by connecting the Slack app"
+                : "Enter the email address you use in Slack"
             }
           </DialogDescription>
         </DialogHeader>
@@ -148,17 +135,13 @@ const SlackConnectDialog = ({
                 <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-lg font-semibold mb-2 text-center">
-                {slackResponse.is_registered
-                  ? "All steps of Slack are completed for you"
-                  : "Slack connected successfully"}
+                Slack connected successfully
               </h3>
-              {!slackResponse.is_registered && (
-                <p className="text-sm text-muted-foreground text-center max-w-sm">
-                  Configuration needs to be done after going on the dashboard.
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground text-center max-w-sm">
+                Complete setup by connecting the app in your workspace from the dashboard.
+              </p>
             </div>
-          ) : (slackResponse && !slackResponse.is_registered && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding) ? (
+          ) : (slackResponse && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding) ? (
             <div className="space-y-4">
               <Label htmlFor="slack-email" className="text-sm">
                 Workspace Email
@@ -166,14 +149,14 @@ const SlackConnectDialog = ({
               <Input
                 id="slack-email"
                 type="email"
-                value={slackEmailAddress}
+                value={slackResponse ? email : (slackEmailAddress ?? "")}
                 className="h-11 text-base bg-gray-100"
                 disabled={true}
               />
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <AlertDescription className="text-blue-900 dark:text-blue-100">
-                  You need to connect the slack app to your workspace of above email address.
+                  Click &quot;Connect App&quot; to select and connect your Slack workspace.
                 </AlertDescription>
               </Alert>
             </div>
@@ -213,7 +196,7 @@ const SlackConnectDialog = ({
             <Button onClick={handleClose} className="w-full">
               Got it
             </Button>
-          ) : (slackResponse && !slackResponse.is_registered && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding) ? (
+          ) : (slackResponse && !isOnboarding) || (connectionUrl && !slackResponse && !isOnboarding) ? (
             <>
               <Button variant="outline" onClick={handleClose}>
                 Cancel

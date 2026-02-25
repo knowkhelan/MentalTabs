@@ -204,7 +204,46 @@ const Dashboard = () => {
     const handleOAuthCallback = async () => {
       const oauthStatus = searchParams.get("oauth");
       const notionStatus = searchParams.get("notion");
+      const slackStatus = searchParams.get("slack");
       const oauthError = searchParams.get("error");
+
+      if (slackStatus === "connected") {
+        const checkSlackStatus = async () => {
+          try {
+            const slackData = await apiGet("/slack/status");
+            if (slackData.status === "ok") {
+              setInputSources((prev) =>
+                prev.map((conn) =>
+                  conn.id === "slack"
+                    ? {
+                        ...conn,
+                        connected: slackData.connected || false,
+                        configured: slackData.configured || false,
+                        connection_url: slackData.connection_url || null,
+                        slack_email_address: slackData.slack_email_address || null,
+                        status: slackData.configured
+                          ? ("active" as const)
+                          : slackData.connected
+                          ? ("needs_attention" as const)
+                          : ("disconnected" as const),
+                        lastSync: slackData.configured
+                          ? "Configured"
+                          : slackData.connected
+                          ? "Needs setup"
+                          : null,
+                      }
+                    : conn
+                )
+              );
+            }
+          } catch (err) {
+            console.log("Could not check Slack status:", err);
+          }
+        };
+        await checkSlackStatus();
+        navigate("/dashboard", { replace: true });
+        return;
+      }
 
       if (oauthStatus === "success") {
         // Store user info from OAuth redirect
@@ -536,33 +575,21 @@ const Dashboard = () => {
   };
 
   const handleSlackConnect = (response: SlackConnectResponse, email: string) => {
-    // Update Dashboard state based on the /slack/connect response
-    // is_registered: true means fully connected and configured
-    // is_registered: false means connected but needs app installation (configuration step)
-    const isConfigured = response.is_registered;
-    const isConnected = true; // If we got a response, connection was successful
-    
     setInputSources((prev) =>
       prev.map((conn) =>
         conn.id === "slack"
           ? {
               ...conn,
-              connected: isConnected,
-              configured: isConfigured,
+              connected: true,
+              configured: false,
               connection_url: response.connection_url || null,
               slack_email_address: email,
-              status: isConfigured
-                ? ("active" as const)
-                : ("needs_attention" as const),
-              lastSync: isConfigured
-                ? "Configured"
-                : "Needs setup",
+              status: "needs_attention" as const,
+              lastSync: "Needs setup",
             }
           : conn
       )
     );
-    
-    // Update dialog props with connection data for future opens
     setSlackConnectionUrl(response.connection_url || null);
     setSlackEmailAddress(email);
   };
