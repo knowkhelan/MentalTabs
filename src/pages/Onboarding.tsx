@@ -18,11 +18,12 @@ const Onboarding = () => {
   const [outputDestination, setOutputDestination] = useState<OutputDestination>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
-  // Handle OAuth callbacks (Gmail and Notion) - MUST RUN FIRST to extract token
+  // Handle OAuth callbacks (Gmail, Notion, GSheet) - MUST RUN FIRST to extract token
   useEffect(() => {
     const handleOAuthCallback = async () => {
       const oauthStatus = searchParams.get("oauth");
       const notionStatus = searchParams.get("notion");
+      const gsheetStatus = searchParams.get("gsheet");
       const oauthError = searchParams.get("error");
 
       if (oauthStatus === "success") {
@@ -67,15 +68,12 @@ const Onboarding = () => {
           console.log("Could not check onboarding status:", error);
           navigate("/onboarding", { replace: true });
         }
-      } else if (notionStatus === "connected" || notionStatus === "setup_needed") {
-        // Notion OAuth successful - OutputDestinationScreen will handle updating its state
-        // Navigate to step 2 if not already there, but don't clean up URL yet
-        // OutputDestinationScreen will clean it up after processing
+      } else if (notionStatus === "connected" || notionStatus === "setup_needed" || gsheetStatus === "connected") {
+        // Notion or GSheet OAuth successful - OutputDestinationScreen will handle updating its state
         setIsCheckingStatus(false);
         if (step !== 2) {
-          setStep(2); // Go to step 2 (OutputDestinationScreen) if not already there
+          setStep(2);
         }
-        // Don't navigate/clean URL here - let OutputDestinationScreen handle it
       } else if (oauthError) {
         setIsCheckingStatus(false);
         console.error("OAuth error:", oauthError);

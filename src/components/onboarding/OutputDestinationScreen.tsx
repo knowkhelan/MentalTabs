@@ -25,7 +25,7 @@ const outputOptions = [
     label: "Google Sheets",
     icon: Table,
     description: "Organize thoughts in spreadsheets",
-    comingSoon: true,
+    comingSoon: false,
   },
 ];
 
@@ -38,55 +38,59 @@ const OutputDestinationScreen = ({
   const [wizardOpen, setWizardOpen] = useState(false);
   const [activeDestination, setActiveDestination] = useState<IntegrationType | null>(null);
 
-  // Check backend connection status on mount and handle Notion OAuth callback
+  // Check backend connection status on mount and handle OAuth callbacks
   useEffect(() => {
     const notionStatus = searchParams.get("notion");
-    
-    // Handle Notion OAuth callback first
+    const gsheetStatus = searchParams.get("gsheet");
+
+    // Handle Notion OAuth callback
     if (notionStatus === "connected" || notionStatus === "setup_needed") {
-      setConnectedDestinations((prev) => {
-        if (!prev.includes("notion")) {
-          return [...prev, "notion"];
-        }
-        return prev;
-      });
-      // Close wizard if it's open
+      setConnectedDestinations((prev) =>
+        prev.includes("notion") ? prev : [...prev, "notion"]
+      );
       setWizardOpen(false);
-      
-      // Clean up URL after processing
       navigate("/onboarding", { replace: true });
-      
-      return; // Don't check backend if we just got a callback
+      return;
+    }
+
+    // Handle GSheet OAuth callback
+    if (gsheetStatus === "connected") {
+      setConnectedDestinations((prev) =>
+        prev.includes("google-sheets") ? prev : [...prev, "google-sheets"]
+      );
+      setWizardOpen(false);
+      navigate("/onboarding", { replace: true });
+      return;
     }
 
     // Check backend connection status (only if token is available)
     const checkConnectionStatus = async () => {
       const token = getToken();
-      
-      // Don't check if token is not available yet
-      if (!token) {
-        return;
-      }
+      if (!token) return;
 
       try {
-        const data = await apiGet("/notion/status");
-        
-        // If Notion is connected, mark it as connected
-        if (data.connected) {
-          setConnectedDestinations((prev) => {
-            if (!prev.includes("notion")) {
-              return [...prev, "notion"];
-            }
-            return prev;
-          });
-        }
+        const [notionData, gsheetData] = await Promise.all([
+          apiGet("/notion/status").catch(() => ({ connected: false })),
+          apiGet("/gsheets/status").catch(() => ({ connected: false })),
+        ]);
+
+        setConnectedDestinations((prev) => {
+          const next = [...prev];
+          if (notionData.connected && !next.includes("notion")) {
+            next.push("notion");
+          }
+          if (gsheetData.connected && !next.includes("google-sheets")) {
+            next.push("google-sheets");
+          }
+          return next;
+        });
       } catch (error) {
-        console.log("Could not check Notion connection status:", error);
+        console.log("Could not check connection status:", error);
       }
     };
 
     checkConnectionStatus();
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleConnectClick = (id: DestinationType) => {
     if (connectedDestinations.includes(id)) return;
