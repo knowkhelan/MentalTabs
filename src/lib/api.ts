@@ -161,3 +161,40 @@ export const apiDelete = async <T = any>(endpoint: string): Promise<T> => {
   
   return response.json();
 };
+
+/**
+ * Get redirect URL from an endpoint that returns 302.
+ * Used for OAuth flows where the backend redirects to an external auth provider.
+ */
+export const getRedirectUrl = async (endpoint: string): Promise<string> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No authentication token found. Please log in.");
+  }
+
+  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    redirect: "manual",
+  });
+
+  if (response.status === 401) {
+    removeToken();
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userPicture");
+    if (window.location.pathname !== "/auth") {
+      window.location.href = "/auth?expired=true";
+    }
+    throw new Error("Authentication expired. Please log in again.");
+  }
+
+  if (response.status === 302) {
+    const location = response.headers.get("Location");
+    if (location) return location;
+  }
+
+  throw new Error("Failed to get redirect URL");
+};

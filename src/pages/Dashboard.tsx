@@ -29,6 +29,7 @@ import ColumnsConfigDialog from "@/components/dashboard/ColumnsConfigDialog";
 import NotionSetupDialog from "@/components/dashboard/NotionSetupDialog";
 import SlackConnectDialog, { SlackConnectResponse } from "@/components/dashboard/SlackConnectDialog";
 import GmailLabelVerifyDialog from "@/components/dashboard/GmailLabelVerifyDialog";
+import GSheetConfigureDialog from "@/components/dashboard/GSheetConfigureDialog";
 import logo from "@/assets/logo.png";
 
 type ConnectionStatus = "active" | "needs_attention" | "disconnected";
@@ -112,7 +113,6 @@ const mockDataSources: Connection[] = [
     connected: false,
     status: "disconnected",
     lastSync: null,
-    comingSoon: true,
   },
 ];
 
@@ -154,6 +154,7 @@ const Dashboard = () => {
   const [slackConnectionUrl, setSlackConnectionUrl] = useState<string | null>(null);
   const [slackEmailAddress, setSlackEmailAddress] = useState<string | null>(null);
   const [gmailLabelVerifyOpen, setGmailLabelVerifyOpen] = useState(false);
+  const [gsheetConfigureOpen, setGsheetConfigureOpen] = useState(false);
   const [gmailSyncInProgress, setGmailSyncInProgress] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [columnConfigs, setColumnConfigs] = useState<Record<string, string[]>>({
@@ -205,7 +206,44 @@ const Dashboard = () => {
       const oauthStatus = searchParams.get("oauth");
       const notionStatus = searchParams.get("notion");
       const slackStatus = searchParams.get("slack");
+      const gsheetStatus = searchParams.get("gsheet");
       const oauthError = searchParams.get("error");
+
+      if (gsheetStatus === "connected") {
+        const checkGSheetStatus = async () => {
+          try {
+            const gsheetData = await apiGet("/gsheets/status");
+            if (gsheetData.status === "ok") {
+              setDataSources((prev) =>
+                prev.map((conn) =>
+                  conn.id === "google-sheets"
+                    ? {
+                        ...conn,
+                        connected: gsheetData.connected || false,
+                        configured: gsheetData.configured || false,
+                        status: gsheetData.configured
+                          ? ("active" as const)
+                          : gsheetData.connected
+                          ? ("needs_attention" as const)
+                          : ("disconnected" as const),
+                        lastSync: gsheetData.configured
+                          ? "Configured"
+                          : gsheetData.connected
+                          ? "Needs setup"
+                          : null,
+                      }
+                    : conn
+                )
+              );
+            }
+          } catch (err) {
+            console.log("Could not check GSheet status:", err);
+          }
+        };
+        await checkGSheetStatus();
+        navigate("/dashboard", { replace: true });
+        return;
+      }
 
       if (slackStatus === "connected") {
         const checkSlackStatus = async () => {
@@ -462,6 +500,32 @@ const Dashboard = () => {
             )
           );
         }
+
+        // Update Google Sheets connection status
+        const gsheetData = await apiGet("/gsheets/status");
+        if (gsheetData.status === "ok") {
+          setDataSources((prev) =>
+            prev.map((conn) =>
+              conn.id === "google-sheets"
+                ? {
+                    ...conn,
+                    connected: gsheetData.connected || false,
+                    configured: gsheetData.configured || false,
+                    status: gsheetData.configured
+                      ? ("active" as const)
+                      : gsheetData.connected
+                      ? ("needs_attention" as const)
+                      : ("disconnected" as const),
+                    lastSync: gsheetData.configured
+                      ? "Configured"
+                      : gsheetData.connected
+                      ? "Needs setup"
+                      : null,
+                  }
+                : conn
+            )
+          );
+        }
       } catch (error) {
         // Backend might not be running or token expired, ignore error
         console.log("Could not check connection status:", error);
@@ -476,6 +540,12 @@ const Dashboard = () => {
     // Special handling for Notion - open FTUX modal instead
     if (id === "notion") {
       setNotionSetupOpen(true);
+      return;
+    }
+
+    // Special handling for Google Sheets - open GSheet configure modal
+    if (id === "google-sheets" && type === "data") {
+      setGsheetConfigureOpen(true);
       return;
     }
 
@@ -541,6 +611,31 @@ const Dashboard = () => {
     }
   };
 
+  const handleGSheetConfigureComplete = async () => {
+    try {
+      const gsheetData = await apiGet("/gsheets/status");
+      if (gsheetData.status === "ok" && gsheetData.connected) {
+        setDataSources((prev) =>
+          prev.map((conn) =>
+            conn.id === "google-sheets"
+              ? {
+                  ...conn,
+                  connected: true,
+                  configured: gsheetData.configured || false,
+                  status: gsheetData.configured
+                    ? ("active" as const)
+                    : ("needs_attention" as const),
+                  lastSync: gsheetData.configured ? "Configured" : "Needs setup",
+                }
+              : conn
+          )
+        );
+      }
+    } catch (error) {
+      console.log("Could not refresh GSheet status:", error);
+    }
+  };
+
   const handleConnect = (id: string, type: "input" | "data") => {
     // Special handling for Gmail OAuth flow
     if (id === "gmail" && type === "input") {
@@ -561,6 +656,18 @@ const Dashboard = () => {
       setSlackConnectionUrl(slackConnection?.connection_url || null);
       setSlackEmailAddress(slackConnection?.slack_email_address || null);
       setSlackConnectOpen(true);
+      return;
+    }
+
+    // Special handling for Google Sheets - redirect to OAuth (same pattern as Notion)
+    if (id === "google-sheets" && type === "data") {
+      const returnTo = "/dashboard";
+      const storedEmail = localStorage.getItem("userEmail");
+      if (!storedEmail) {
+        toast.error("Please log in first");
+        return;
+      }
+      window.location.href = `${API_BASE_URL}/gsheets/connect?user_email=${encodeURIComponent(storedEmail)}&returnTo=${encodeURIComponent(returnTo)}`;
       return;
     }
 
@@ -761,7 +868,14 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {inputSources.map((connection) => (
-              <Card key={connection.id} className="border-border">
+              <Card
+                key={connection.id}
+                className={
+                  connection.status === "needs_attention"
+                    ? "border-yellow-400 border-2"
+                    : "border-border"
+                }
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -877,7 +991,14 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {dataSources.map((connection) => (
-              <Card key={connection.id} className="border-border">
+              <Card
+                key={connection.id}
+                className={
+                  connection.status === "needs_attention"
+                    ? "border-yellow-400 border-2"
+                    : "border-border"
+                }
+              >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -989,6 +1110,13 @@ const Dashboard = () => {
           open={gmailLabelVerifyOpen}
           onOpenChange={setGmailLabelVerifyOpen}
           onVerifySuccess={handleGmailLabelVerifySuccess}
+        />
+
+        {/* GSheet Configure Dialog */}
+        <GSheetConfigureDialog
+          open={gsheetConfigureOpen}
+          onOpenChange={setGsheetConfigureOpen}
+          onComplete={handleGSheetConfigureComplete}
         />
 
         {/* Stats Section */}
